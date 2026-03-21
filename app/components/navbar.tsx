@@ -45,9 +45,9 @@ const Navbar = () => {
       {/* Fixed Navbar Container */}
       <header className="w-full fixed top-5 left-0 z-50 px-4">
         {/* Navbar Pill */}
-        <div className="mx-auto max-w-5xl bg-white py-3 px-6 shadow-2xl shadow-purple-200 rounded-md flex items-center justify-between border border-blue-200">
+        <div className="mx-auto max-w-5xl bg-white py-3 px-6 rounded-md flex items-center justify-between border border-purple-200">
           {/* Brand */}
-          <div className="font-black text-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+          <div className="font-black text-2xl bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
             Sellora.
           </div>
 
@@ -73,7 +73,7 @@ const Navbar = () => {
             </Link>
             <Link
               href="/auth/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center gap-2"
             >
               <LucideSend size={18} />
               Mulai Sekarang
@@ -97,7 +97,7 @@ const Navbar = () => {
 
       {/* Mobile/Tablet Dropdown Menu - WITH ACTIVE INDICATOR */}
       {isMenuOpen && (
-        <div className="xl:hidden fixed top-24 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-t border-gray-200 z-40 md:hidden">
+        <div className="xl:hidden fixed top-24 left-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-200 z-40 md:hidden">
           <nav className="max-w-5xl mx-auto px-6 py-8">
             <div className="flex flex-col items-stretch space-y-4">
               {/* Nav Links dengan Active State */}
@@ -109,8 +109,8 @@ const Navbar = () => {
                     flex items-center gap-3 py-4 px-6 rounded-xl transition-all duration-300 text-lg font-semibold text-gray-800 group
                     ${
                       pathname === item.href
-                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-2xl shadow-blue-200"
-                        : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-md"
+                        ? "bg-linear-to-r from-blue-500 to-purple-600 text-white"
+                        : "hover:bg-linear-to-r hover:from-blue-50 hover:to-purple-50"
                     }
                   `}
                   onClick={closeMenu}
@@ -119,7 +119,7 @@ const Navbar = () => {
                   {pathname === item.href && (
                     <LucideCircleDot
                       size={24}
-                      className="text-white/90 drop-shadow-lg ml-1 -mr-1 flex-shrink-0 md:hidden"
+                      className="text-white/90 drop-shadow-lg ml-1 -mr-1  md:hidden"
                     />
                   )}
 

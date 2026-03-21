@@ -54,7 +54,7 @@ export default function Documentation() {
 
         {/* Header */}
         <section className="mt-20 flex flex-col gap-6 mb-20">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-mono">
             <BlurText
               text="Documentation Sellora ✨"
               delay={200}
@@ -70,7 +70,7 @@ export default function Documentation() {
 
         {/* Dynamic List of Pages */}
         <section className="mb-24">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-12 font-mono">
             📚 List of Pages
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
@@ -78,7 +78,7 @@ export default function Documentation() {
               <Link
                 key={page.url}
                 href={page.url}
-                className="group relative p-6 bg-linear-to-br from-white to-gray-50 border border-gray-200 rounded-2xl hover:shadow-2xl hover:shadow-purple-200 hover:-translate-y-2 hover:border-purple-300 transition-all duration-500 overflow-hidden"
+                className="group relative p-6 bg-linear-to-br from-white to-gray-50 border border-gray-200 rounded-2xl hover:-translate-y-2 hover:border-purple-300 transition-all duration-500 overflow-hidden"
               >
                 {/* Background shine effect */}
                 <div className="absolute inset-0 bg-linear-to-r from-purple-500/0 via-blue-500/10 to-blue-500/0 -skew-x-12 -translate-x-40 group-hover:translate-x-0 transition-transform duration-1000" />
@@ -86,7 +86,9 @@ export default function Documentation() {
                 <div className="relative z-10 flex flex-col items-start space-y-3">
                   <div className="flex items-center gap-2 text-purple-600 group-hover:scale-110 transition-transform duration-300">
                     {page.icon}
-                    <span className="font-bold text-lg">{page.name}</span>
+                    <span className="font-bold text-lg font-mono">
+                      {page.name}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     {page.description}
@@ -111,11 +113,11 @@ export default function Documentation() {
             id={page.sectionId}
             className="mb-24 scroll-mt-20"
           >
-            <h2 className="text-4xl md:text-5xl font-bold flex items-center gap-4 mb-4 bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h2 className="font-mono text-4xl md:text-5xl font-bold flex items-center gap-4 mb-4 bg-linear-to-r from-gray-900 via-purple-600 to-gray-700 bg-clip-text text-transparent">
               <span>{page.name}</span>
             </h2>
             {/* Konten section bisa diisi */}
-            <div className="bg-linear-to-br from-slate-50 to-blue-50 p-8 md:p-12 rounded-3xl border border-slate-200">
+            <div className="bg-linear-to-br from-slate-50 to-blue-50 p-8 md:p-12 rounded-3xl border border-purple-300 hover:border-blue-200 transition-all duration-300">
               <p className="text-lg text-gray-700 leading-relaxed">
                 Dokumentasi lengkap untuk <strong>{page.name}</strong> akan
                 tersedia di sini. Fitur utama: {page.description}

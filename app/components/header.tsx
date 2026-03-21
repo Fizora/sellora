@@ -10,7 +10,9 @@ import {
   LucideDownload,
   LucideMenu,
   LucideX,
+  LucideChevronDown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {
   title?: string;
@@ -29,78 +31,89 @@ export default function Header({
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <header
-      className={`bg-white ${className} shadow-sm border-b border-gray-200`}
-    >
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        {/* Left: Title and Mobile Menu Button */}
-        <div className="flex items-center gap-4">
-          {mobile && (
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              {dropdownOpen ? <LucideX size={20} /> : <LucideMenu size={20} />}
-            </button>
-          )}
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          {/* Desktop Module Navigation */}
-          {!mobile && moduleItems.length > 0 && (
-            <nav className="mx-4 flex-1 flex justify-center gap-6">
-              {moduleItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex text-sm font-medium transition-colors hover:text-blue-600 ${
-                    pathname === item.href
-                      ? "text-blue-600 border-b-2 border-blue-600 pb-1"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {item.label}
-                  <LucideArrowUpRight size={12} />
-                </Link>
-              ))}
-            </nav>
+    <header className={`bg-white border-b border-purple-200 ${className}`}>
+      <div className="px-3 sm:px-6 py-3 flex items-center justify-between">
+        {/* Left: Module Navigation or Title */}
+        <div className="flex items-center gap-3">
+          {mobile ? (
+            // Mobile: Show dropdown if there are moduleItems
+            <div className="relative">
+              {moduleItems.length > 0 ? (
+                <>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 text-lg font-bold text-gray-900"
+                  >
+                    {title}
+                    <LucideChevronDown
+                      size={18}
+                      className={`transition-transform ${
+                        dropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {dropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 mt-2 w-48 bg-white rounded-md border border-purple-200 py-2 z-50"
+                      >
+                        {moduleItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setDropdownOpen(false)}
+                            className={`block px-4 py-2.5 text-sm transition-colors ${
+                              pathname === item.href
+                                ? "bg-violet-50 text-violet-600 font-medium"
+                                : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              ) : (
+                <h1 className="text-lg font-bold text-gray-900">{title}</h1>
+              )}
+            </div>
+          ) : (
+            // Desktop: Show module navigation
+            moduleItems.length > 0 && (
+              <nav className="flex gap-1">
+                {moduleItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex text-sm font-medium transition-colors px-3 py-2 rounded-lg ${
+                      pathname === item.href
+                        ? "bg-violet-50 text-violet-600 font-medium"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            )
           )}
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-            <LucideBell size={20} />
+            <LucideBell size={18} />
           </button>
-          <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-            <LucideDownload size={20} />
-            <span className="sr-only">Export</span>
-          </button>
-          <div className="w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-            SA
+          <div className="w-8 h-8 bg-linear-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            A
           </div>
         </div>
       </div>
-
-      {/* Mobile Dropdown Module Navigation */}
-      {mobile && dropdownOpen && (
-        <div className=" lg:hidden border-t border-gray-200 bg-white shadow-lg animate-slideDown">
-          <nav className="p-4 space-y-2">
-            {moduleItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block px-4 py-3 rounded-xl text-base font-medium transition-colors ${
-                  pathname === item.href
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-                onClick={() => setDropdownOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
