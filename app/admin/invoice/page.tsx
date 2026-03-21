@@ -99,7 +99,7 @@ export default function InvoicePage() {
         title: "Invoice",
         moduleItems: [
           { label: "Invoices", href: "/admin/invoice" },
-          { label: "Setting", href: "/admin/invoice/setting" },
+          { label: "Settings", href: "/admin/invoice/settings" },
         ],
       }}
     >

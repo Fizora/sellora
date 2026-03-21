@@ -1,4 +1,4 @@
-export default function AllReportDashboard() {
+export default function SettingsPos() {
   return (
     <div>
       <h1>All Reports</h1>

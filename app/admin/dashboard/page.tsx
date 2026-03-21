@@ -184,7 +184,7 @@ export default function Dashboard() {
         title: "Dashboard",
         moduleItems: [
           { label: "Overview", href: "/admin/dashboard" },
-          { label: "Analytics", href: "/admin/dashboard/analytic" },
+          { label: "Analytics", href: "/admin/dashboard/analytics" },
           { label: "Reports", href: "/admin/dashboard/all-report" },
         ],
       }}
