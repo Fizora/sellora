@@ -154,7 +154,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-violet-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-black text-xl">S</span>
               </div>
-              <span className="text-2xl font-black bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="text-2xl font-black bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent font-mono">
                 Sellora
               </span>
             </Link>
@@ -365,7 +365,7 @@ export default function Home() {
                 Fitur Unggulan
               </span>
             </div>
-            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4 font-mono">
               Semua yang Anda butuhkan
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -407,7 +407,7 @@ export default function Home() {
                 Harga Terjangkau
               </span>
             </div>
-            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4 font-mono">
               Pilih paket yang sesuai
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -491,7 +491,7 @@ export default function Home() {
                 Testimoni
               </span>
             </div>
-            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 mb-4 font-mono">
               Dipercaya ribuan pengusaha
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -547,7 +547,7 @@ export default function Home() {
             <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full translate-x-32 translate-y-32"></div>
 
             <div className="relative z-10">
-              <h2 className="text-3xl lg:text-5xl font-black text-white mb-4">
+              <h2 className="text-3xl lg:text-5xl font-black text-white mb-4 font-mono">
                 Mulai bisnis Anda hari ini
               </h2>
               <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
@@ -584,7 +584,9 @@ export default function Home() {
                 <div className="w-10 h-10 bg-linear-to-br from-purple-600 to-violet-600 rounded-xl flex items-center justify-center">
                   <span className="text-white font-black text-xl">S</span>
                 </div>
-                <span className="text-2xl font-black text-white">Sellora</span>
+                <span className="text-2xl font-black text-white font-mono">
+                  Sellora
+                </span>
               </Link>
               <p className="text-gray-400 mb-6 max-w-sm">
                 Platform all-in-one untuk mengelola bisnis retail Anda dengan

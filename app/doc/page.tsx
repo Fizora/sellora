@@ -30,7 +30,7 @@ const listOfPages = [
   },
   {
     url: "/doc/pos",
-    name: "POS",
+    name: "Point of Sale",
     icon: <LucideCreditCard size={16} />,
     description:
       "Point of Sale kasir cepat dengan scan barcode dan pembayaran.",
@@ -78,7 +78,7 @@ export default function Documentation() {
               <Link
                 key={page.url}
                 href={page.url}
-                className="group relative p-6 bg-linear-to-br from-white to-gray-50 border border-gray-200 rounded-2xl hover:-translate-y-2 hover:border-purple-300 transition-all duration-500 overflow-hidden"
+                className="group relative p-6 bg-linear-to-br from-white to-gray-50 border border-gray-200 rounded-2xl hover:-translate-y-2 hover:border-purple-200 transition-all duration-500 overflow-hidden"
               >
                 {/* Background shine effect */}
                 <div className="absolute inset-0 bg-linear-to-r from-purple-500/0 via-blue-500/10 to-blue-500/0 -skew-x-12 -translate-x-40 group-hover:translate-x-0 transition-transform duration-1000" />
@@ -117,7 +117,7 @@ export default function Documentation() {
               <span>{page.name}</span>
             </h2>
             {/* Konten section bisa diisi */}
-            <div className="bg-linear-to-br from-slate-50 to-blue-50 p-8 md:p-12 rounded-3xl border border-purple-300 hover:border-blue-200 transition-all duration-300">
+            <div className="bg-linear-to-br from-slate-50 to-blue-50 p-8 md:p-12 rounded-3xl border border-purple-200 hover:border-blue-200 transition-all duration-300">
               <p className="text-lg text-gray-700 leading-relaxed">
                 Dokumentasi lengkap untuk <strong>{page.name}</strong> akan
                 tersedia di sini. Fitur utama: {page.description}

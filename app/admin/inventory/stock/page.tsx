@@ -133,7 +133,7 @@ export default function StockPage() {
         ],
       }}
     >
-      <main className="min-h-screen p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+      <main className="min-h-screen mb-15 md:my-0 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {stats.map((stat, index) => (
@@ -164,7 +164,7 @@ export default function StockPage() {
         {/* Stock Table */}
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h2 className="text-xl font-semibold text-gray-800 font-mono">
               Riwayat Stock
             </h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

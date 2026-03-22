@@ -47,7 +47,7 @@ const Navbar = () => {
         {/* Navbar Pill */}
         <div className="mx-auto max-w-5xl bg-white py-3 px-6 rounded-md flex items-center justify-between border border-purple-200">
           {/* Brand */}
-          <div className="font-black text-2xl bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+          <div className="font-black text-2xl bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparen font-monot">
             Sellora.
           </div>
 

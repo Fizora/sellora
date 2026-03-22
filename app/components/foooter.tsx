@@ -9,14 +9,14 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <Link
               href="/"
-              className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+              className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-mono"
             >
               Sellora.
             </Link>
             <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">
               Simplify your financial analysis with real‑time HPP and BEP
               reports. Manage stock, invoices, and print reports – all in one
-              PWA‑ready platform.
+              platform.
             </p>
           </div>
 

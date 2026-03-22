@@ -151,7 +151,7 @@ export default function PosPage() {
         ],
       }}
     >
-      <main className="min-h-screen p-4 sm:p-6 space-y-6">
+      <main className="min-h-screen mb-15 md:my-0 p-4 sm:p-6 space-y-6">
         {/* Statistik Cepat */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Today's Sales */}
@@ -377,7 +377,7 @@ export default function PosPage() {
 
             {/* Ringkasan Harga */}
             {cart.length > 0 && (
-              <div className="border-t pt-4 space-y-3">
+              <div className="border-t border-purple-200 pt-4 space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-gray-400 rounded-full" />

@@ -142,7 +142,7 @@ export default function ReportPage() {
         ],
       }}
     >
-      <main className="min-h-screen p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+      <main className="min-h-screen mb-15 md:my-0 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {stats.map((stat, index) => (
