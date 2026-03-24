@@ -130,6 +130,7 @@ export default function StockPage() {
           { label: "Produk", href: "/admin/inventory/product" },
           { label: "Kode Produk", href: "/admin/inventory/code-product" },
           { label: "Laporan", href: "/admin/inventory/report" },
+          { label: "Pengaturan", href: "/admin/inventory/settings" },
         ],
       }}
     >

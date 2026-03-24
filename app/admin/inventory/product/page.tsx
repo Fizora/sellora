@@ -118,11 +118,12 @@ export default function ProductPage() {
       config={{
         title: "Inventory | Product",
         moduleItems: [
-          { label: "Dashboard", href: "/admin/inventory" },
-          { label: "Stock", href: "/admin/inventory/stock" },
-          { label: "Product", href: "/admin/inventory/product" },
-          { label: "Code Product", href: "/admin/inventory/code-product" },
-          { label: "Report", href: "/admin/inventory/report" },
+          { label: "Ringkasan", href: "/admin/inventory" },
+          { label: "Stok", href: "/admin/inventory/stock" },
+          { label: "Produk", href: "/admin/inventory/product" },
+          { label: "Kode Produk", href: "/admin/inventory/code-product" },
+          { label: "Laporan", href: "/admin/inventory/report" },
+          { label: "Pengaturan", href: "/admin/inventory/settings" },
         ],
       }}
     >
