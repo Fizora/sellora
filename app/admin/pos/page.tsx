@@ -1,4 +1,3 @@
-// app/dashboard/pos/page.tsx
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
@@ -70,12 +69,18 @@ interface CartItem {
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Filter produk berdasarkan pencarian
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Filter produk berdasarkan pencarian dan kategori
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "All" || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   // Tambah ke keranjang
   const addToCart = (product: (typeof products)[0]) => {
@@ -145,9 +150,9 @@ export default function PosPage() {
       config={{
         title: "Point of Sale",
         moduleItems: [
-          { label: "Point of Sale", href: "/admin/pos" },
-          { label: "Analytics", href: "/admin/pos/analytics" },
-          { label: "Settings", href: "/admin/pos/settings" },
+          { label: "Kasir", href: "/admin/pos" },
+          { label: "Analitik", href: "/admin/pos/analytics" },
+          { label: "Pengaturan", href: "/admin/pos/settings" },
         ],
       }}
     >
@@ -240,14 +245,15 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Quick Categories */}
+            {/* Quick Categories - with active state */}
             <div className="flex flex-wrap gap-2 mb-4">
               {["All", "Hijab", "Mukenah", "Pants", "Footwear", "Bags"].map(
-                (cat, i) => (
+                (cat) => (
                   <button
                     key={cat}
+                    onClick={() => setSelectedCategory(cat)}
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      i === 0
+                      selectedCategory === cat
                         ? "bg-violet-600 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-violet-100 hover:text-violet-600"
                     }`}

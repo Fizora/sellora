@@ -44,21 +44,19 @@ export default function PosSettingsPage() {
   return (
     <DashboardLayout
       config={{
-        title: "POS Settings",
+        title: "Pengaturan Kasir",
         moduleItems: [
-          { label: "Point of Sale", href: "/admin/pos" },
-          { label: "Analytics", href: "/admin/pos/analytics" },
-          { label: "Settings", href: "/admin/pos/settings" },
+          { label: "Kasir", href: "/admin/pos" },
+          { label: "Analitik", href: "/admin/pos/analytics" },
+          { label: "Pengaturan", href: "/admin/pos/settings" },
         ],
       }}
     >
       <div className="p-4 mb-15 md:my-0 md:p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">POS Settings</h1>
-          <p className="text-gray-500">
-            Configure your point of sale preferences
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Pengaturan Kasir</h1>
+          <p className="text-gray-500">Konfigurasi preferensi kasir Anda</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -68,12 +66,12 @@ export default function PosSettingsPage() {
               <div className="p-2 bg-purple-100 rounded-lg">
                 <LucideSettings size={20} className="text-purple-600" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">General</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Umum</h2>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tax Rate (%)
+                  Tarif Pajak (%)
                 </label>
                 <input
                   type="number"
@@ -82,14 +80,14 @@ export default function PosSettingsPage() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Applied to all sales (e.g., PPN 11%)
+                  Diterapkan pada semua penjualan (mis., PPN 11%)
                 </p>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">Enable Discounts</p>
+                  <p className="font-medium text-gray-900">Aktifkan Diskon</p>
                   <p className="text-sm text-gray-500">
-                    Allow discounts on transactions
+                    Izinkan diskon pada transaksi
                   </p>
                 </div>
                 <button
@@ -108,7 +106,7 @@ export default function PosSettingsPage() {
               {discountEnabled && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Default Discount (%)
+                    Diskon Default (%)
                   </label>
                   <input
                     type="number"
@@ -134,12 +132,12 @@ export default function PosSettingsPage() {
               <div className="p-2 bg-purple-100 rounded-lg">
                 <LucideReceipt size={20} className="text-purple-600" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">Receipt</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Struk</h2>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Header Text
+                  Teks Header
                 </label>
                 <input
                   type="text"
@@ -150,7 +148,7 @@ export default function PosSettingsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Footer Text
+                  Teks Footer
                 </label>
                 <textarea
                   rows={2}
@@ -180,21 +178,21 @@ export default function PosSettingsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Printer Type
+                  Tipe Printer
                 </label>
                 <select
                   value={printerType}
                   onChange={(e) => setPrinterType(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="thermal">Thermal Printer (ESC/POS)</option>
+                  <option value="thermal">Printer Thermal (ESC/POS)</option>
                   <option value="dotmatrix">Dot Matrix</option>
-                  <option value="network">Network Printer</option>
+                  <option value="network">Printer Jaringan</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Printer IP Address
+                  Alamat IP Printer
                 </label>
                 <input
                   type="text"
@@ -230,31 +228,33 @@ export default function PosSettingsPage() {
               <div className="p-2 bg-purple-100 rounded-lg">
                 <LucideCreditCard size={20} className="text-purple-600" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">Payment</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Pembayaran
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Default Payment Method
+                  Metode Pembayaran Default
                 </label>
                 <select
                   value={defaultPaymentMethod}
                   onChange={(e) => setDefaultPaymentMethod(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="cash">Cash</option>
+                  <option value="cash">Tunai</option>
                   <option value="qris">QRIS</option>
-                  <option value="debit">Debit Card</option>
-                  <option value="transfer">Bank Transfer</option>
+                  <option value="debit">Kartu Debit</option>
+                  <option value="transfer">Transfer Bank</option>
                 </select>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">
-                    Enable Cash Drawer
+                    Aktifkan Laci Uang
                   </p>
                   <p className="text-sm text-gray-500">
-                    Auto-open cash drawer after sale
+                    Buka laci uang secara otomatis setelah penjualan
                   </p>
                 </div>
                 <button

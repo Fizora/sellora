@@ -91,7 +91,7 @@ export default function ProductPage() {
 
   const stats = [
     {
-      title: "Total Product",
+      title: "Total Produk",
       value: totalProducts,
       change: "Products",
       icon: <LucideTag size={18} />,
@@ -105,7 +105,7 @@ export default function ProductPage() {
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Categories",
+      title: "Kategori",
       value: "5",
       change: "+1",
       icon: <LucideTag size={18} />,
@@ -158,7 +158,7 @@ export default function ProductPage() {
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-semibold text-gray-800 font-mono">
-              Data Product
+              Data Produk
             </h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative">
@@ -189,7 +189,7 @@ export default function ProductPage() {
                     Kode
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nama Product
+                    Nama Produk
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Kategori

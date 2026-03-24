@@ -14,9 +14,9 @@ const Footer = () => {
               Sellora.
             </Link>
             <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">
-              Simplify your financial analysis with real‑time HPP and BEP
-              reports. Manage stock, invoices, and print reports – all in one
-              platform.
+              Sederhanakan analisis keuangan Anda dengan laporan HPP dan BEP
+              real-time. Kelola stok, faktur, dan cetak laporan – semuanya dalam
+              satu platform.
             </p>
           </div>
 
@@ -31,7 +31,7 @@ const Footer = () => {
                   href="#features"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  Features
+                  Fitur
                 </Link>
               </li>
               <li>
@@ -39,7 +39,7 @@ const Footer = () => {
                   href="/pricing"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  Pricing
+                  Harga
                 </Link>
               </li>
               <li>
@@ -47,7 +47,7 @@ const Footer = () => {
                   href="/dashboard"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  Dashboard
+                  Dasbor
                 </Link>
               </li>
             </ul>
@@ -55,7 +55,7 @@ const Footer = () => {
 
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Company
+              Perusahaan
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
@@ -63,7 +63,7 @@ const Footer = () => {
                   href="/about"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  About
+                  Tentang Kami
                 </Link>
               </li>
               <li>
@@ -71,7 +71,7 @@ const Footer = () => {
                   href="/contact"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  Contact
+                  Kontak
                 </Link>
               </li>
               <li>
@@ -79,7 +79,7 @@ const Footer = () => {
                   href="/privacy"
                   className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  Privacy
+                  Kebijakan Privasi
                 </Link>
               </li>
             </ul>
@@ -88,7 +88,7 @@ const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            © {new Date().getFullYear()} Sellora. All rights reserved.
+            © {new Date().getFullYear()} Sellora. Semua hak dilindungi.
           </p>
           <div className="flex gap-6">
             <a

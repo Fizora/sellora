@@ -31,28 +31,28 @@ export default function AllReportDashboard() {
   // Dummy data untuk ringkasan
   const overallStats = [
     {
-      title: "Total Revenue",
+      title: "Total Pendapatan",
       value: "Rp 124.5 JT",
       change: "+12.5%",
       icon: <LucideDollarSign size={18} />,
       gradient: "from-violet-600 to-purple-700",
     },
     {
-      title: "Transactions",
+      title: "Transaksi",
       value: "1,245",
       change: "+8.2%",
       icon: <LucideShoppingCart size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Products Sold",
+      title: "Produk Terjual",
       value: "3,847",
       change: "+5.3%",
       icon: <LucidePackage size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Outstanding Invoices",
+      title: "Faktur Tertunda",
       value: "Rp 28.3 JT",
       change: "-2.1%",
       icon: <LucideReceipt size={18} />,
@@ -106,9 +106,9 @@ export default function AllReportDashboard() {
       config={{
         title: "All Reports",
         moduleItems: [
-          { label: "Overview", href: "/admin/dashboard" },
-          { label: "Analytics", href: "/admin/dashboard/analytics" },
-          { label: "Reports", href: "/admin/dashboard/all-report" },
+          { label: "Ringkasan", href: "/admin/dashboard" },
+          { label: "Analitik", href: "/admin/dashboard/analytics" },
+          { label: "Laporan", href: "/admin/dashboard/all-report" },
         ],
       }}
     >
@@ -120,7 +120,7 @@ export default function AllReportDashboard() {
               All Reports
             </h1>
             <p className="text-gray-500">
-              Comprehensive reports across all modules
+              Laporan komprehensif di seluruh modul
             </p>
           </div>
           <div className="flex gap-2">
@@ -156,12 +156,12 @@ export default function AllReportDashboard() {
                   }`}
                 >
                   {range === "today"
-                    ? "Today"
+                    ? "Hari Ini"
                     : range === "week"
-                      ? "This Week"
+                      ? "Minggu Ini"
                       : range === "month"
-                        ? "This Month"
-                        : "Custom"}
+                        ? "Bulan Ini"
+                        : "Kustom"}
                 </button>
               ))}
             </div>
@@ -215,7 +215,7 @@ export default function AllReportDashboard() {
         </div>
 
         {/* Overall Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
           {overallStats.map((stat, idx) => (
             <div
               key={idx}
@@ -255,31 +255,31 @@ export default function AllReportDashboard() {
                   <LucideShoppingCart size={20} className="text-purple-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  POS Report
+                  Laporan POS
                 </h2>
               </div>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Sales</p>
+                    <p className="text-sm text-gray-500">Total Penjualan</p>
                     <p className="text-xl font-bold text-gray-900">
                       {posReport.totalSales}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Transactions</p>
+                    <p className="text-sm text-gray-500">Transaksi</p>
                     <p className="text-xl font-bold text-gray-900">
                       {posReport.totalTransactions}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Average Transaction</p>
+                    <p className="text-sm text-gray-500">Rata-rata Transaksi</p>
                     <p className="text-xl font-bold text-gray-900">
                       {posReport.averageTransaction}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Top Product</p>
+                    <p className="text-sm text-gray-500">Produk Terlaris</p>
                     <p className="text-lg font-bold text-gray-900">
                       {posReport.topProduct}
                     </p>
@@ -306,13 +306,13 @@ export default function AllReportDashboard() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Products</p>
+                    <p className="text-sm text-gray-500">Total Produk</p>
                     <p className="text-xl font-bold text-gray-900">
                       {inventoryReport.totalProducts}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Stock Value</p>
+                    <p className="text-sm text-gray-500">Nilai Stok</p>
                     <p className="text-xl font-bold text-gray-900">
                       {inventoryReport.totalStockValue}
                     </p>
@@ -323,7 +323,7 @@ export default function AllReportDashboard() {
                         size={16}
                         className="text-amber-500"
                       />
-                      <p className="text-sm text-gray-500">Low Stock Items</p>
+                      <p className="text-sm text-gray-500">Item Stok Rendah</p>
                     </div>
                     <p className="text-xl font-bold text-amber-600">
                       {inventoryReport.lowStockItems}
@@ -332,7 +332,7 @@ export default function AllReportDashboard() {
                   <div className="p-3 bg-gray-50 rounded-md">
                     <div className="flex items-center gap-2">
                       <LucideTrendingDown size={16} className="text-red-500" />
-                      <p className="text-sm text-gray-500">Out of Stock</p>
+                      <p className="text-sm text-gray-500">Stok Habis</p>
                     </div>
                     <p className="text-xl font-bold text-red-600">
                       {inventoryReport.outOfStockItems}
@@ -357,25 +357,25 @@ export default function AllReportDashboard() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Invoices</p>
+                    <p className="text-sm text-gray-500">Total Faktur</p>
                     <p className="text-xl font-bold text-gray-900">
                       {invoiceReport.totalInvoices}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Paid Amount</p>
+                    <p className="text-sm text-gray-500">Jumlah Dibayar</p>
                     <p className="text-xl font-bold text-emerald-600">
                       {invoiceReport.totalPaid}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Pending Amount</p>
+                    <p className="text-sm text-gray-500">Jumlah Tertunda</p>
                     <p className="text-xl font-bold text-amber-600">
                       {invoiceReport.totalPending}
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Overdue Amount</p>
+                    <p className="text-sm text-gray-500">Jumlah Terlambat</p>
                     <p className="text-xl font-bold text-red-600">
                       {invoiceReport.totalOverdue}
                     </p>

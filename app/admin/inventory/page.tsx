@@ -69,28 +69,28 @@ export default function Inventory() {
 
   const stats = [
     {
-      title: "Products",
+      title: "Produk",
       value: "156",
       change: "+5",
       icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
-      title: "Stock Value",
+      title: "Nilai Stok",
       value: "Rp 87.2M",
       change: "+12%",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Low Stock",
+      title: "Stok Rendah",
       value: "23",
       change: "-3",
       icon: <LucideAlertTriangle size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Categories",
+      title: "Kategori",
       value: "12",
       change: "+1",
       icon: <LucideTags size={18} />,
@@ -103,11 +103,12 @@ export default function Inventory() {
       config={{
         title: "Inventory",
         moduleItems: [
-          { label: "Dashboard", href: "/admin/inventory" },
-          { label: "Stock", href: "/admin/inventory/stock" },
-          { label: "Product", href: "/admin/inventory/product" },
-          { label: "Code Product", href: "/admin/inventory/code-product" },
-          { label: "Report", href: "/admin/inventory/report" },
+          { label: "Ringkasan", href: "/admin/inventory" },
+          { label: "Stok", href: "/admin/inventory/stock" },
+          { label: "Produk", href: "/admin/inventory/product" },
+          { label: "Kode Produk", href: "/admin/inventory/code-product" },
+          { label: "Laporan", href: "/admin/inventory/report" },
+          { label: "Pengaturan", href: "/admin/inventory/settings" },
         ],
       }}
     >
@@ -116,12 +117,12 @@ export default function Inventory() {
           <h1 className="text-2xl font-bold text-gray-900 font-mono">
             Inventory
           </h1>
-          <p className="text-gray-500">Manage your product stock</p>
+          <p className="text-gray-500">Kelola stok produk Anda</p>
         </div>
 
         {/* Stats Cards */}
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat, index) => (
             <div
               key={index}
@@ -150,7 +151,7 @@ export default function Inventory() {
         {/* Inventory Table */}
         <div className="bg-white rounded-2xl border border-purple-200 overflow-hidden">
           <div className="p-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-900">Product List</h3>
+            <h3 className="font-bold text-gray-900">Daftar Produk</h3>
           </div>
           <div className="divide-y divide-gray-50">
             {inventoryItems.map((item, index) => (
@@ -172,7 +173,7 @@ export default function Inventory() {
                     <p className="font-bold text-gray-900">
                       {formatCurrency(item.price)}
                     </p>
-                    <p className="text-xs text-gray-500">{item.stock} units</p>
+                    <p className="text-xs text-gray-500">{item.stock} unit</p>
                   </div>
                   <span
                     className={`px-3 py-1.5 text-xs font-semibold rounded-full ${statusStyles[item.status]}`}

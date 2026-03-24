@@ -100,28 +100,28 @@ export default function ReportPage() {
 
   const stats = [
     {
-      title: "Total Reports",
+      title: "Total Laporan",
       value: reports.length,
       change: "Reports",
       icon: <LucideFileText size={18} />,
       gradient: "from-violet-500 to-purple-600",
     },
     {
-      title: "Stock Reports",
+      title: "Laporan Stok",
       value: reports.filter((r) => r.type === "stock").length,
       change: "+2",
       icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
-      title: "Product Reports",
+      title: "Laporan Produk",
       value: reports.filter((r) => r.type === "product").length,
       change: "+1",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Ready to Download",
+      title: "Siap Unduh",
       value: reports.filter((r) => r.status === "ready").length,
       change: "Available",
       icon: <LucideDownload size={18} />,
@@ -174,27 +174,27 @@ export default function ReportPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-mono">
-              Stock Summary
+              Ringkasan Stok
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-3">
                   <LucideTrendingUp className="text-green-600" size={20} />
-                  <span className="text-gray-700">Stock Masuk</span>
+                  <span className="text-gray-700">Stok Masuk</span>
                 </div>
                 <span className="font-bold text-green-600">+120</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-3">
                   <LucideTrendingDown className="text-red-600" size={20} />
-                  <span className="text-gray-700">Stock Keluar</span>
+                  <span className="text-gray-700">Stok Keluar</span>
                 </div>
                 <span className="font-bold text-red-600">-40</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-3">
                   <LucidePackage className="text-purple-600" size={20} />
-                  <span className="text-gray-700">Total Stock</span>
+                  <span className="text-gray-700">Total Stok</span>
                 </div>
                 <span className="font-bold text-purple-600">405</span>
               </div>
@@ -203,20 +203,20 @@ export default function ReportPage() {
 
           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 font-mono">
-              Product Summary
+              Ringkasan Produk
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-3">
                   <LucidePackage className="text-blue-600" size={20} />
-                  <span className="text-gray-700">Total Product</span>
+                  <span className="text-gray-700">Total Produk</span>
                 </div>
                 <span className="font-bold text-blue-600">5</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-3">
                   <LucideFileText className="text-indigo-600" size={20} />
-                  <span className="text-gray-700">Total Kode Product</span>
+                  <span className="text-gray-700">Total Kode Produk</span>
                 </div>
                 <span className="font-bold text-indigo-600">6</span>
               </div>

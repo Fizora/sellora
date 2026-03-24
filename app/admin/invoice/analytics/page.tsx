@@ -17,13 +17,13 @@ import {
 } from "chart.js";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import {
+  LucideFileText,
   LucideDollarSign,
-  LucideShoppingCart,
   LucideTrendingUp,
-  LucideCreditCard,
   LucideCalendar,
-  LucidePrinter,
   LucideUsers,
+  LucideClock,
+  LucideAlertTriangle,
 } from "lucide-react";
 
 ChartJS.register(
@@ -39,11 +39,11 @@ ChartJS.register(
   ArcElement,
 );
 
-export default function PosAnalyticsPage() {
+export default function InvoiceAnalyticsPage() {
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
 
-  // Data dummy berdasarkan periode
-  const getSalesData = () => {
+  // Dummy data berdasarkan periode
+  const getInvoiceData = () => {
     if (period === "daily") {
       return {
         labels: [
@@ -57,66 +57,79 @@ export default function PosAnalyticsPage() {
           "16:00",
           "17:00",
         ],
-        data: [1.2, 2.3, 3.1, 4.5, 5.2, 4.8, 3.9, 2.5, 1.8],
+        invoices: [2, 3, 4, 5, 6, 5, 4, 3, 2],
+        revenue: [1.2, 2.1, 2.8, 3.5, 4.2, 3.8, 3.0, 2.2, 1.5],
       };
     } else if (period === "weekly") {
       return {
         labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-        data: [2.1, 2.8, 3.2, 3.5, 4.2, 5.1, 4.3],
+        invoices: [4, 5, 6, 7, 8, 6, 5],
+        revenue: [2.5, 3.2, 3.8, 4.5, 5.2, 4.0, 3.1],
       };
     } else {
       return {
         labels: ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"],
-        data: [12.5, 15.2, 18.3, 20.1],
+        invoices: [18, 22, 25, 30],
+        revenue: [12.5, 15.2, 18.3, 21.5],
       };
     }
   };
 
-  const salesData = getSalesData();
-  const salesChartData = {
-    labels: salesData.labels,
+  const data = getInvoiceData();
+
+  const invoiceTrendData = {
+    labels: data.labels,
     datasets: [
       {
-        label: "Penjualan (Juta Rp)",
-        data: salesData.data,
+        label: "Jumlah Invoice",
+        data: data.invoices,
         borderColor: "rgb(139, 92, 246)",
         backgroundColor: "rgba(139, 92, 246, 0.1)",
         tension: 0.4,
         fill: true,
+        yAxisID: "y",
+      },
+      {
+        label: "Revenue (Juta Rp)",
+        data: data.revenue,
+        borderColor: "rgb(34, 197, 94)",
+        backgroundColor: "rgba(34, 197, 94, 0.1)",
+        tension: 0.4,
+        fill: true,
+        yAxisID: "y1",
       },
     ],
   };
 
-  const topProductsData = {
-    labels: [
-      "Hijab Rifa",
-      "Ori Mukenah",
-      "Cargo Loos Pants",
-      "Sandal Wanita",
-      "Tas Ransel",
-    ],
+  const statusDistributionData = {
+    labels: ["Lunas", "Tertunda", "Jatuh Tempo"],
     datasets: [
       {
-        label: "Jumlah Terjual",
-        data: [45, 32, 28, 19, 12],
-        backgroundColor: "rgba(139, 92, 246, 0.7)",
-        borderRadius: 8,
-      },
-    ],
-  };
-
-  const paymentMethodData = {
-    labels: ["Tunai", "QRIS", "Debit", "Transfer"],
-    datasets: [
-      {
-        data: [55, 25, 15, 5],
+        data: [68, 22, 10],
         backgroundColor: [
           "rgba(139, 92, 246, 0.8)",
-          "rgba(59, 130, 246, 0.8)",
-          "rgba(34, 197, 94, 0.8)",
           "rgba(251, 191, 36, 0.8)",
+          "rgba(239, 68, 68, 0.8)",
         ],
         borderWidth: 0,
+      },
+    ],
+  };
+
+  const topCustomersData = {
+    labels: [
+      "John Doe",
+      "Jane Smith",
+      "Ahmad Fauzi",
+      "Siti Aminah",
+      "Budi Santoso",
+    ],
+    datasets: [
+      {
+        label: "Total Belanja (Juta Rp)",
+        data: [12.5, 9.8, 7.2, 5.5, 4.0],
+        backgroundColor: "rgba(139, 92, 246, 0.7)",
+        borderRadius: 8,
       },
     ],
   };
@@ -124,9 +137,19 @@ export default function PosAnalyticsPage() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { position: "top" as const } },
     scales: {
-      y: { beginAtZero: true, grid: { color: "rgba(0, 0, 0, 0.05)" } },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: "Jumlah Invoice" },
+        grid: { color: "rgba(0, 0, 0, 0.05)" },
+      },
+      y1: {
+        beginAtZero: true,
+        position: "right" as const,
+        title: { display: true, text: "Revenue (Juta Rp)" },
+        grid: { drawOnChartArea: false },
+      },
       x: { grid: { display: false } },
     },
   };
@@ -155,52 +178,54 @@ export default function PosAnalyticsPage() {
 
   const stats = [
     {
-      title: "Total Penjualan",
-      value: "Rp 3.8 JT",
-      change: "+18%",
-      icon: <LucideDollarSign size={18} />,
+      title: "Total Faktur",
+      value: "156",
+      change: "+12",
+      icon: <LucideFileText size={18} />,
       gradient: "from-violet-600 to-purple-700",
     },
     {
-      title: "Transaksi",
-      value: "24",
-      change: "+6",
-      icon: <LucideShoppingCart size={18} />,
+      title: "Total Pendapatan",
+      value: "Rp 124.5 JT",
+      change: "+18%",
+      icon: <LucideDollarSign size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Rata-rata Transaksi",
-      value: "Rp 158K",
-      change: "+3%",
+      title: "Rata-rata Nilai",
+      value: "Rp 798K",
+      change: "+5%",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Total Pelanggan",
-      value: "18",
-      change: "+2",
-      icon: <LucideUsers size={18} />,
-      gradient: "from-blue-500 to-indigo-600",
+      title: "Jumlah Terlambat",
+      value: "Rp 8.2 JT",
+      change: "-2%",
+      icon: <LucideAlertTriangle size={18} />,
+      gradient: "from-red-500 to-rose-600",
     },
   ];
 
   return (
     <DashboardLayout
       config={{
-        title: "Analitik Kasir",
+        title: "Analitik Faktur",
         moduleItems: [
-          { label: "Kasir", href: "/admin/pos" },
-          { label: "Analitik", href: "/admin/pos/analytics" },
-          { label: "Pengaturan", href: "/admin/pos/settings" },
+          { label: "Faktur", href: "/admin/invoice" },
+          { label: "Analitik", href: "/admin/invoice/analytics" },
+          { label: "Pengaturan", href: "/admin/invoice/settings" },
         ],
       }}
     >
-      <div className="p-4 mb-15 md:my-0 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analitik Kasir</h1>
-            <p className="text-gray-500">Metrik kinerja untuk kasir</p>
+            <h1 className="text-2xl font-bold text-gray-900 font-mono">
+              Analitik Faktur
+            </h1>
+            <p className="text-gray-500">Wawasan kinerja untuk faktur Anda</p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-purple-200 rounded-md p-1">
             <button
@@ -263,51 +288,60 @@ export default function PosAnalyticsPage() {
           ))}
         </div>
 
-        {/* Sales Chart */}
+        {/* Invoice & Revenue Trend */}
         <div className="bg-white rounded-2xl border border-purple-200 p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900">Tren Penjualan</h3>
+            <h3 className="font-bold text-gray-900">
+              Tren Faktur & Pendapatan
+            </h3>
             <LucideCalendar size={18} className="text-gray-400" />
           </div>
           <div className="h-80">
-            <Line data={salesChartData} options={chartOptions} />
+            <Line data={invoiceTrendData} options={chartOptions} />
           </div>
         </div>
 
-        {/* Top Products & Payment Methods */}
+        {/* Status Distribution & Top Customers */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Produk Terlaris</h3>
+            <h3 className="font-bold text-gray-900 mb-4">
+              Distribusi Status Faktur
+            </h3>
             <div className="h-72">
-              <Bar data={topProductsData} options={barOptions} />
+              <Doughnut
+                data={statusDistributionData}
+                options={doughnutOptions}
+              />
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Metode Pembayaran</h3>
+            <h3 className="font-bold text-gray-900 mb-4">
+              Pelanggan Teratas berdasarkan Pengeluaran
+            </h3>
             <div className="h-72">
-              <Doughnut data={paymentMethodData} options={doughnutOptions} />
+              <Bar data={topCustomersData} options={barOptions} />
             </div>
           </div>
         </div>
 
-        {/* Hourly Breakdown (if daily) */}
+        {/* Additional Insights (if daily) */}
         {period === "daily" && (
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">
-              Volume Transaksi per Jam
+              Distribusi Faktur per Jam
             </h3>
             <div className="space-y-3">
-              {salesData.labels.map((hour, i) => (
+              {data.labels.map((hour, i) => (
                 <div key={hour} className="flex items-center gap-4">
                   <span className="w-16 text-sm text-gray-600">{hour}</span>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${(salesData.data[i] / 6) * 100}%` }}
+                      style={{ width: `${(data.invoices[i] / 8) * 100}%` }}
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
-                    Rp {salesData.data[i]}K
+                    {data.invoices[i]} faktur
                   </span>
                 </div>
               ))}

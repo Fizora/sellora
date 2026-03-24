@@ -42,7 +42,7 @@ export default function Header({
                 <>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 text-lg font-bold text-gray-900"
+                    className="flex items-center gap-2 text-lg font-bold text-gray-900 font-mono"
                   >
                     {title}
                     <LucideChevronDown

@@ -40,7 +40,7 @@ export default function Home() {
     },
     {
       icon: <LucidePackage className="w-6 h-6" />,
-      title: "Inventory Management",
+      title: "Manajemen Inventori",
       description: "Kelola stok produk secara real-time dengan akurat",
     },
     {

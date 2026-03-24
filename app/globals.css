@@ -12,6 +12,4 @@
   --font-mono: var(--font-mono);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+

@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-module.exports = {
-  allowedDevOrigins: ["192.168.1.6"],
+  // Nonaktifkan reactRefresh untuk memastikan HMR berfungsi dengan benar
+  // reactRefresh: true,
+  // Ensure HMR works properly
+  // hotReloader: {
+  //   overlay: {
+  //     warnings: false,
+  //     errors: true,
+  //   },
+  // },
 };
 
 export default nextConfig;

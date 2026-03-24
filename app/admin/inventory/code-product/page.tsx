@@ -169,7 +169,7 @@ export default function CodeProductPage() {
         <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h2 className="text-xl font-semibold text-gray-800 font-mono">
-              Data Kode Product
+              Data Kode Produk
             </h2>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative">
@@ -200,7 +200,7 @@ export default function CodeProductPage() {
                     Kode
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Product
+                    Produk
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Barcode

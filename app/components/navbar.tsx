@@ -84,7 +84,7 @@ const Navbar = () => {
           <button
             onClick={toggleMenu}
             className="xl:hidden p-2.5 rounded-full hover:bg-gray-100 transition-all duration-200 md:block"
-            aria-label="Toggle navigation menu"
+            aria-label="Toggle menu navigasi"
           >
             {isMenuOpen ? (
               <LucideX size={24} className="text-gray-700" />

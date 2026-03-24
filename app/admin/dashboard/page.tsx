@@ -115,28 +115,28 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: "Total Sales",
+      title: "Total Penjualan",
       value: "Rp 50.4M",
       change: "+12.5%",
       icon: <LucideDollarSign size={18} />,
       gradient: "from-violet-500 to-purple-600",
     },
     {
-      title: "Orders",
+      title: "Pesanan",
       value: "1,245",
       change: "+8.2%",
       icon: <LucideShoppingCart size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Customers",
+      title: "Pelanggan",
       value: "892",
       change: "+5.3%",
       icon: <LucideUsers size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Products",
+      title: "Produk",
       value: "3,847",
       change: "-2.1%",
       icon: <LucideTrendingUp size={18} />,
@@ -183,9 +183,9 @@ export default function Dashboard() {
       config={{
         title: "Dashboard",
         moduleItems: [
-          { label: "Overview", href: "/admin/dashboard" },
-          { label: "Analytics", href: "/admin/dashboard/analytics" },
-          { label: "Reports", href: "/admin/dashboard/all-report" },
+          { label: "Ringkasan", href: "/admin/dashboard" },
+          { label: "Analitik", href: "/admin/dashboard/analytics" },
+          { label: "Laporan", href: "/admin/dashboard/all-report" },
         ],
       }}
     >
@@ -195,11 +195,11 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900 font-mono">
             Dashboard
           </h1>
-          <p className="text-gray-500">Overview of your business</p>
+          <p className="text-gray-500">Ringkasan bisnis Anda</p>
         </div>
 
         {/* Stats Cards - Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat, index) => (
             <div
               key={index}
@@ -232,14 +232,14 @@ export default function Dashboard() {
         {/* Charts - Grid */}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl  border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Sales Trend</h3>
+            <h3 className="font-bold text-gray-900 mb-4">Tren Penjualan</h3>
             <div className="h-64">
               <Line data={monthlySalesData} options={chartOptions} />
             </div>
           </div>
 
           <div className="bg-white rounded-2xl  border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Categories</h3>
+            <h3 className="font-bold text-gray-900 mb-4">Kategori</h3>
             <div className="h-64">
               <Doughnut data={categoryData} options={doughnutOptions} />
             </div>
@@ -249,7 +249,7 @@ export default function Dashboard() {
         {/* Recent Orders */}
         <div className="bg-white rounded-2xl  border border-purple-200 overflow-hidden">
           <div className="p-4 border-b border-purple-200">
-            <h3 className="font-bold text-gray-900">Recent Orders</h3>
+            <h3 className="font-bold text-gray-900">Pesanan Terbaru</h3>
           </div>
           <div className="divide-y divide-gray-50">
             {recentOrders.map((order) => (

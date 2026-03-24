@@ -98,21 +98,21 @@ export default function StockPage() {
 
   const stats = [
     {
-      title: "Total Stock",
+      title: "Total Stok",
       value: "405",
       change: "Units",
       icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
-      title: "Stock In",
+      title: "Masuk",
       value: totalStockIn,
       change: "+120",
       icon: <LucideArrowDownLeft size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Stock Out",
+      title: "Keluar",
       value: totalStockOut,
       change: "-40",
       icon: <LucideArrowUpRight size={18} />,
@@ -125,11 +125,11 @@ export default function StockPage() {
       config={{
         title: "Inventory | Stock",
         moduleItems: [
-          { label: "Dashboard", href: "/admin/inventory" },
-          { label: "Stock", href: "/admin/inventory/stock" },
-          { label: "Product", href: "/admin/inventory/product" },
-          { label: "Code Product", href: "/admin/inventory/code-product" },
-          { label: "Report", href: "/admin/inventory/report" },
+          { label: "Ringkasan", href: "/admin/inventory" },
+          { label: "Stok", href: "/admin/inventory/stock" },
+          { label: "Produk", href: "/admin/inventory/product" },
+          { label: "Kode Produk", href: "/admin/inventory/code-product" },
+          { label: "Laporan", href: "/admin/inventory/report" },
         ],
       }}
     >
@@ -193,10 +193,10 @@ export default function StockPage() {
               <thead>
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Kode Product
+                    Kode Produk
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nama Product
+                    Nama Produk
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Kategori

@@ -21,7 +21,7 @@ export default function Register() {
           {/* Google Button */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-100"
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-purple-200 hover:border-purple-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-100"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -69,7 +69,7 @@ export default function Register() {
                 <input
                   type="email"
                   id="email"
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50"
+                  className="w-full pl-11 pr-4 py-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50"
                   placeholder="email@contoh.com"
                 />
               </div>
@@ -91,7 +91,7 @@ export default function Register() {
                 <input
                   type="password"
                   id="password"
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50"
+                  className="w-full pl-11 pr-4 py-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50"
                   placeholder="Buat password aman"
                 />
               </div>

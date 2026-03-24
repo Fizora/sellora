@@ -31,9 +31,9 @@ const invoices: Invoice[] = [
 ];
 
 const statusConfig: Record<InvoiceStatus, { label: string; class: string }> = {
-  paid: { label: "Paid", class: "bg-emerald-100 text-emerald-700" },
-  pending: { label: "Pending", class: "bg-amber-100 text-amber-700" },
-  overdue: { label: "Overdue", class: "bg-red-100 text-red-700" },
+  paid: { label: "Lunas", class: "bg-emerald-100 text-emerald-700" },
+  pending: { label: "Tertunda", class: "bg-amber-100 text-amber-700" },
+  overdue: { label: "Jatuh Tempo", class: "bg-red-100 text-red-700" },
 };
 
 export default function InvoicePage() {
@@ -67,21 +67,21 @@ export default function InvoicePage() {
       gradient: "from-violet-500 to-purple-600",
     },
     {
-      title: "Paid",
+      title: "Dibayar",
       value: invoices.filter((i) => i.status === "paid").length,
       change: "+3",
       icon: <LucideCheckCircle size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Pending",
+      title: "Tertunda",
       value: invoices.filter((i) => i.status === "pending").length,
       change: "-1",
       icon: <LucideClock size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Revenue",
+      title: "Pendapatan",
       value: formatCurrency(
         invoices
           .filter((i) => i.status === "paid")
@@ -98,8 +98,9 @@ export default function InvoicePage() {
       config={{
         title: "Invoice",
         moduleItems: [
-          { label: "Invoices", href: "/admin/invoice" },
-          { label: "Settings", href: "/admin/invoice/settings" },
+          { label: "Faktur", href: "/admin/invoice" },
+          { label: "Analitik", href: "/admin/invoice/analytics" },
+          { label: "Pengaturan", href: "/admin/invoice/settings" },
         ],
       }}
     >
@@ -108,11 +109,11 @@ export default function InvoicePage() {
           <h1 className="text-2xl font-bold text-gray-900 font-mono">
             Invoice
           </h1>
-          <p className="text-gray-500">Manage customer invoices</p>
+          <p className="text-gray-500">Kelola faktur pelanggan</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {stats.map((stat, index) => (
             <div
               key={index}
@@ -148,7 +149,7 @@ export default function InvoicePage() {
               />
               <input
                 type="text"
-                placeholder="Search invoices..."
+                placeholder="Cari faktur..."
                 className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

@@ -160,28 +160,28 @@ export default function AnalyticsPage() {
 
   const stats = [
     {
-      title: "Total Sales",
+      title: "Total Penjualan",
       value: "Rp 50.4M",
       change: "+12.5%",
       icon: <LucideDollarSign size={18} />,
       gradient: "from-violet-500 to-purple-600",
     },
     {
-      title: "Orders",
+      title: "Pesanan",
       value: "1,245",
       change: "+8.2%",
       icon: <LucideShoppingCart size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "AOV",
+      title: "Nilai Pesanan Rata-rata",
       value: "Rp 40,500",
       change: "+4.1%",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Conversion Rate",
+      title: "Tingkat Konversi",
       value: "3.2%",
       change: "+0.5%",
       icon: <LucideTrendingUp size={18} />,
@@ -194,9 +194,9 @@ export default function AnalyticsPage() {
       config={{
         title: "Analytics",
         moduleItems: [
-          { label: "Overview", href: "/admin/dashboard" },
-          { label: "Analytics", href: "/admin/dashboard/analytics" },
-          { label: "Reports", href: "/admin/dashboard/all-report" },
+          { label: "Ringkasan", href: "/admin/dashboard" },
+          { label: "Analitik", href: "/admin/dashboard/analytics" },
+          { label: "Laporan", href: "/admin/dashboard/all-report" },
         ],
       }}
     >
@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
               Analytics
             </h1>
             <p className="text-gray-500">
-              Deep dive into your business performance
+              Analisis mendalam kinerja bisnis Anda
             </p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-purple-200 rounded-md p-1">
@@ -246,7 +246,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat, idx) => (
             <div
               key={idx}
@@ -276,7 +276,7 @@ export default function AnalyticsPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Sales Trend</h3>
+              <h3 className="font-bold text-gray-900">Tren Penjualan</h3>
               <LucideCalendar size={18} className="text-gray-400" />
             </div>
             <div className="h-64">
@@ -284,7 +284,9 @@ export default function AnalyticsPage() {
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Sales by Category</h3>
+            <h3 className="font-bold text-gray-900 mb-4">
+              Penjualan per Kategori
+            </h3>
             <div className="h-64">
               <Doughnut data={categoryData} options={doughnutOptions} />
             </div>
@@ -304,19 +306,17 @@ export default function AnalyticsPage() {
         {/* Additional Metrics */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">
-              Customer Acquisition
-            </h3>
+            <h3 className="font-bold text-gray-900 mb-4">Akuisisi Pelanggan</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">New Customers</span>
+                <span className="text-gray-600">Pelanggan Baru</span>
                 <span className="font-bold text-gray-900">+156</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-purple-600 h-2 rounded-full w-3/4"></div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Returning Customers</span>
+                <span className="text-gray-600">Pelanggan Kembali</span>
                 <span className="font-bold text-gray-900">+89</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -325,10 +325,12 @@ export default function AnalyticsPage() {
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Revenue by Device</h3>
+            <h3 className="font-bold text-gray-900 mb-4">
+              Pendapatan per Perangkat
+            </h3>
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Mobile</span>
+                <span className="text-gray-600">Seluler</span>
                 <span className="font-bold text-gray-900">65%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">

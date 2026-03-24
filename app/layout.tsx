@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, Merriweather } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+const fontSans = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Bricolage_Grotesque({
+const fontMono = Bricolage_Grotesque({
   variable: "--font-mono",
   subsets: ["latin"],
 });
@@ -48,7 +48,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} text-normal antialiased bg-gray-100 text-sm font-medium`}
+        className={`${fontSans.variable} ${fontMono.variable} text-normal font-sans antialiased bg-gray-100 text-sm font-medium`}
       >
         {children}
       </body>
