@@ -15,7 +15,7 @@ import {
   LucideTrendingUp,
 } from "lucide-react";
 
-// Data produk dummy (sama dengan inventory)
+// Data produk dummy
 const products = [
   {
     id: 1,
@@ -66,13 +66,16 @@ interface CartItem {
   quantity: number;
 }
 
+// Konstanta tarif PPN (11% sesuai ketentuan Indonesia)
+const PPN_RATE = 0.11;
+
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Filter produk berdasarkan pencarian dan kategori
+  // Filter produk
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name
       .toLowerCase()
@@ -125,13 +128,16 @@ export default function PosPage() {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Hitung total
+  // Hitung total (harga produk sudah termasuk PPN)
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const tax = subtotal * 0.1; // Pajak 10%
-  const total = subtotal + tax;
+  // DPP = Subtotal / (1 + PPN_RATE)
+  const dpp = subtotal / (1 + PPN_RATE);
+  // PPN = Subtotal - DPP
+  const ppn = subtotal - dpp;
+  const total = subtotal; // Total tetap sama karena subtotal sudah termasuk PPN
 
   // Handle checkout
   const handleCheckout = () => {
@@ -143,6 +149,15 @@ export default function PosPage() {
       alert("Pembayaran berhasil! Transaksi telah dicetak.");
       setCart([]);
     }, 1500);
+  };
+
+  // Format mata uang Rupiah
+  const formatRupiah = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
@@ -157,6 +172,14 @@ export default function PosPage() {
       }}
     >
       <main className="min-h-screen mb-15 md:my-0 p-4 sm:p-6 space-y-6">
+        {/* Header */}
+        <div className="">
+          <h1 className="text-2xl font-bold text-gray-900 font-mono">
+            Point of Sale
+          </h1>
+          <p className="text-gray-500">Kelola dan manajemen kasir Anda</p>
+        </div>
+
         {/* Statistik Cepat */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Today's Sales */}
@@ -194,7 +217,7 @@ export default function PosPage() {
                 {cart.length} items
               </p>
               <p className="text-emerald-200 text-sm">
-                Rp {subtotal.toLocaleString("id-ID")}
+                {formatRupiah(subtotal)}
               </p>
             </div>
           </div>
@@ -208,7 +231,6 @@ export default function PosPage() {
                 <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                   <LucideUsers size={20} />
                 </div>
-                6
                 <span className="text-amber-100 text-sm font-medium">
                   Pelanggan
                 </span>
@@ -245,7 +267,7 @@ export default function PosPage() {
               </div>
             </div>
 
-            {/* Quick Categories - with active state */}
+            {/* Quick Categories */}
             <div className="flex flex-wrap gap-2 mb-4">
               {["All", "Hijab", "Mukenah", "Pants", "Footwear", "Bags"].map(
                 (cat) => (
@@ -287,7 +309,7 @@ export default function PosPage() {
                   </h3>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-violet-600 font-bold">
-                      Rp {product.price.toLocaleString("id-ID")}
+                      {formatRupiah(product.price)}
                     </p>
                     <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                       {product.stock} stok
@@ -307,9 +329,8 @@ export default function PosPage() {
             </div>
           </div>
 
-          {/* Kolom Kanan: Keranjang (1/3) */}
+          {/* Kolom Kanan: Keranjang */}
           <div className="bg-white rounded-2xl p-4 sm:p-6 border border-purple-200 flex flex-col h-fit lg:sticky lg:top-6">
-            {/* Header Keranjang */}
             <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 <div className="p-1.5 bg-violet-100 rounded-lg">
@@ -350,7 +371,7 @@ export default function PosPage() {
                         {item.name}
                       </h4>
                       <p className="text-sm text-gray-500">
-                        Rp {item.price.toLocaleString("id-ID")}
+                        {formatRupiah(item.price)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -381,35 +402,42 @@ export default function PosPage() {
               )}
             </div>
 
-            {/* Ringkasan Harga */}
+            {/* Ringkasan Harga dengan DPP dan PPN */}
             {cart.length > 0 && (
               <div className="border-t border-purple-200 pt-4 space-y-3">
+                {/* Subtotal (sudah termasuk PPN) */}
                 <div className="flex justify-between text-gray-600">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-gray-400 rounded-full" />
                     Subtotal
                   </span>
-                  <span className="font-medium">
-                    Rp {subtotal.toLocaleString("id-ID")}
-                  </span>
+                  <span className="font-medium">{formatRupiah(subtotal)}</span>
                 </div>
+
+                {/* Dasar Pengenaan Pajak (DPP) */}
+                <div className="flex justify-between text-gray-600 text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-400 rounded-full" />
+                    Dasar Pengenaan Pajak
+                  </span>
+                  <span className="font-medium">{formatRupiah(dpp)}</span>
+                </div>
+
+                {/* PPN 11% */}
                 <div className="flex justify-between text-gray-600">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-amber-400 rounded-full" />
-                    PPN(11%)
+                    PPN (11%)
                   </span>
-                  <span className="font-medium">
-                    Rp {tax.toLocaleString("id-ID")}
-                  </span>
+                  <span className="font-medium">{formatRupiah(ppn)}</span>
                 </div>
+
                 <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-dashed border-gray-200">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-violet-500 rounded-full" />
                     Total
                   </span>
-                  <span className="text-violet-600">
-                    Rp {total.toLocaleString("id-ID")}
-                  </span>
+                  <span className="text-violet-600">{formatRupiah(total)}</span>
                 </div>
               </div>
             )}

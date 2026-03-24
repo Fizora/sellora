@@ -8,11 +8,6 @@ import {
   LucidePackage,
   LucideShoppingCart,
   LucideReceipt,
-  LucideDollarSign,
-  LucideTrendingUp,
-  LucideTrendingDown,
-  LucideAlertTriangle,
-  LucideTable,
 } from "lucide-react";
 
 // Tipe data untuk setiap modul
@@ -276,51 +271,6 @@ export default function AllReportDashboard() {
     }).format(value);
   };
 
-  // Hitung ringkasan dari data dummy (contoh untuk statistik)
-  const totalRevenue = posTransactions
-    .filter((tx) => tx.status === "completed")
-    .reduce((sum, tx) => sum + tx.amount, 0);
-  const totalTransactions = posTransactions.length;
-  const totalProductsSold = posTransactions.reduce(
-    (sum, tx) => sum + tx.quantity,
-    0,
-  );
-  const totalPendingInvoice = invoices
-    .filter((inv) => inv.status === "pending" || inv.status === "partial")
-    .reduce((sum, inv) => sum + (inv.total - inv.paid), 0);
-
-  const overallStats = [
-    {
-      title: "Total Pendapatan",
-      value: formatCurrency(totalRevenue),
-      change: "+12.5%",
-      icon: <LucideDollarSign size={18} />,
-      gradient: "from-violet-600 to-purple-700",
-    },
-    {
-      title: "Transaksi",
-      value: totalTransactions.toString(),
-      change: "+8.2%",
-      icon: <LucideShoppingCart size={18} />,
-      gradient: "from-emerald-500 to-teal-600",
-    },
-    {
-      title: "Produk Terjual",
-      value: totalProductsSold.toString(),
-      change: "+5.3%",
-      icon: <LucidePackage size={18} />,
-      gradient: "from-amber-500 to-orange-600",
-    },
-    {
-      title: "Faktur Tertunda",
-      value: formatCurrency(totalPendingInvoice),
-      change: "-2.1%",
-      icon: <LucideReceipt size={18} />,
-      gradient: "from-blue-500 to-indigo-600",
-      negative: true,
-    },
-  ];
-
   return (
     <DashboardLayout
       config={{
@@ -432,37 +382,6 @@ export default function AllReportDashboard() {
               Invoice
             </label>
           </div>
-        </div>
-
-        {/* Overall Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-          {overallStats.map((stat, idx) => (
-            <div
-              key={idx}
-              className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    {stat.icon}
-                  </div>
-                  <span className="text-white/80 text-sm font-medium">
-                    {stat.title}
-                  </span>
-                </div>
-                <p className="text-3xl sm:text-4xl font-bold mb-1">
-                  {stat.value}
-                </p>
-                <p
-                  className={`text-sm ${stat.negative ? "text-red-200" : "text-emerald-200"}`}
-                >
-                  {stat.change}
-                </p>
-              </div>
-            </div>
-          ))}
         </div>
 
         {/* Tabel POS */}

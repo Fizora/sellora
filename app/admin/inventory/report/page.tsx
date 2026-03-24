@@ -5,134 +5,165 @@ import { useState } from "react";
 import {
   LucideFileText,
   LucideDownload,
-  LucideEye,
-  LucideTrendingUp,
-  LucideTrendingDown,
   LucidePackage,
+  LucideSearch,
+  LucideFilter,
+  LucideX,
 } from "lucide-react";
 
-interface ReportItem {
+interface InventoryItem {
   id: string;
-  title: string;
-  type: "stock" | "product" | "transaction";
-  period: string;
-  date: string;
-  status: "ready" | "processing";
+  name: string;
+  category: string;
+  stock: number;
+  unit: string;
+  price: number;
+  status: "available" | "low" | "out";
 }
 
-const initialReports: ReportItem[] = [
-  {
-    id: "1",
-    title: "Laporan Stock Bulanan",
-    type: "stock",
-    period: "Maret 2024",
-    date: "2024-03-01",
-    status: "ready",
-  },
-  {
-    id: "2",
-    title: "Laporan Penjualan Product",
-    type: "product",
-    period: "Februari 2024",
-    date: "2024-02-01",
-    status: "ready",
-  },
-  {
-    id: "3",
-    title: "Laporan Transaksi Harian",
-    type: "transaction",
-    period: "15 Maret 2024",
-    date: "2024-03-15",
-    status: "ready",
-  },
-  {
-    id: "4",
-    title: "Laporan Stock Mingguan",
-    type: "stock",
-    period: "Minggu 2 - Maret 2024",
-    date: "2024-03-14",
-    status: "ready",
-  },
-  {
-    id: "5",
-    title: "Laporan Product Terlaris",
-    type: "product",
-    period: "Maret 2024",
-    date: "2024-03-01",
-    status: "processing",
-  },
-];
+export default function InventoryReport() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-export default function ReportPage() {
-  const [filterType, setFilterType] = useState<string>("all");
-  const [reports] = useState<ReportItem[]>(initialReports);
-
-  const filteredReports =
-    filterType === "all"
-      ? reports
-      : reports.filter((r) => r.type === filterType);
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "stock":
-        return "Stock";
-      case "product":
-        return "Product";
-      case "transaction":
-        return "Transaksi";
-      default:
-        return type;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "stock":
-        return "bg-blue-100 text-blue-800";
-      case "product":
-        return "bg-purple-100 text-purple-800";
-      case "transaction":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const stats = [
+  // Data dummy inventory
+  const [inventoryItems] = useState<InventoryItem[]>([
     {
-      title: "Total Laporan",
-      value: reports.length,
-      change: "Reports",
-      icon: <LucideFileText size={18} />,
-      gradient: "from-violet-500 to-purple-600",
+      id: "INV-001",
+      name: "Hijab Rifa",
+      category: "Pakaian",
+      stock: 45,
+      unit: "pcs",
+      price: 233500,
+      status: "available",
     },
     {
-      title: "Laporan Stok",
-      value: reports.filter((r) => r.type === "stock").length,
-      change: "+2",
-      icon: <LucidePackage size={18} />,
-      gradient: "from-blue-500 to-indigo-600",
+      id: "INV-002",
+      name: "Baju Muslim",
+      category: "Pakaian",
+      stock: 12,
+      unit: "pcs",
+      price: 250000,
+      status: "low",
     },
     {
-      title: "Laporan Produk",
-      value: reports.filter((r) => r.type === "product").length,
-      change: "+1",
-      icon: <LucideTrendingUp size={18} />,
-      gradient: "from-emerald-500 to-teal-600",
+      id: "INV-003",
+      name: "Al-Qur'an Terjemah",
+      category: "Buku",
+      stock: 0,
+      unit: "eks",
+      price: 125000,
+      status: "out",
     },
     {
-      title: "Siap Unduh",
-      value: reports.filter((r) => r.status === "ready").length,
-      change: "Available",
-      icon: <LucideDownload size={18} />,
-      gradient: "from-amber-500 to-orange-600",
+      id: "INV-004",
+      name: "Sajadah",
+      category: "Perlengkapan",
+      stock: 8,
+      unit: "lembar",
+      price: 70000,
+      status: "low",
     },
+    {
+      id: "INV-005",
+      name: "Mukena",
+      category: "Pakaian",
+      stock: 23,
+      unit: "set",
+      price: 350000,
+      status: "available",
+    },
+    {
+      id: "INV-006",
+      name: "Tasbih Digital",
+      category: "Aksesoris",
+      stock: 15,
+      unit: "pcs",
+      price: 85000,
+      status: "available",
+    },
+    {
+      id: "INV-007",
+      name: "Sarung",
+      category: "Pakaian",
+      stock: 0,
+      unit: "pcs",
+      price: 120000,
+      status: "out",
+    },
+    {
+      id: "INV-008",
+      name: "Al-Qur'an Tajwid",
+      category: "Buku",
+      stock: 5,
+      unit: "eks",
+      price: 150000,
+      status: "low",
+    },
+    {
+      id: "INV-009",
+      name: "Minyak Attar",
+      category: "Aksesoris",
+      stock: 32,
+      unit: "botol",
+      price: 45000,
+      status: "available",
+    },
+    {
+      id: "INV-010",
+      name: "Peci Hitam",
+      category: "Pakaian",
+      stock: 18,
+      unit: "pcs",
+      price: 55000,
+      status: "available",
+    },
+  ]);
+
+  // Ambil daftar kategori unik untuk filter
+  const categories = [
+    "all",
+    ...new Set(inventoryItems.map((item) => item.category)),
   ];
+
+  // Filter data berdasarkan search, kategori, dan status
+  const filteredItems = inventoryItems.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || item.category === categoryFilter;
+    const matchesStatus =
+      statusFilter === "all" || item.status === statusFilter;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const handleExportPDF = () => {
+    alert("Ekspor ke PDF (demo) - data yang difilter akan diekspor");
+  };
+
+  const handleExportExcel = () => {
+    alert("Ekspor ke Excel (demo) - data yang difilter akan diekspor");
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("all");
+    setStatusFilter("all");
+  };
 
   return (
     <DashboardLayout
       config={{
-        title: "Inventory | Report",
+        title: "Inventory Report",
         moduleItems: [
           { label: "Ringkasan", href: "/admin/inventory" },
           { label: "Stok", href: "/admin/inventory/stock" },
@@ -143,168 +174,191 @@ export default function ReportPage() {
         ],
       }}
     >
-      <main className="min-h-screen mb-15 md:my-0 p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
+      <div className="p-4 mb-15 md:my-0 md:p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 font-mono">
+              Laporan Inventory
+            </h1>
+            <p className="text-gray-500">
+              Data stok barang dan status ketersediaan
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    {stat.icon}
-                  </div>
-                  <span className="text-white/80 text-sm font-medium">
-                    {stat.title}
-                  </span>
-                </div>
-                <p className="text-3xl sm:text-4xl font-bold mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-mono">
-              Ringkasan Stok
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucideTrendingUp className="text-green-600" size={20} />
-                  <span className="text-gray-700">Stok Masuk</span>
-                </div>
-                <span className="font-bold text-green-600">+120</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucideTrendingDown className="text-red-600" size={20} />
-                  <span className="text-gray-700">Stok Keluar</span>
-                </div>
-                <span className="font-bold text-red-600">-40</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucidePackage className="text-purple-600" size={20} />
-                  <span className="text-gray-700">Total Stok</span>
-                </div>
-                <span className="font-bold text-purple-600">405</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-mono">
-              Ringkasan Produk
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucidePackage className="text-blue-600" size={20} />
-                  <span className="text-gray-700">Total Produk</span>
-                </div>
-                <span className="font-bold text-blue-600">5</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucideFileText className="text-indigo-600" size={20} />
-                  <span className="text-gray-700">Total Kode Produk</span>
-                </div>
-                <span className="font-bold text-indigo-600">6</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                <div className="flex items-center gap-3">
-                  <LucideFileText className="text-orange-600" size={20} />
-                  <span className="text-gray-700">Laporan Bulan Ini</span>
-                </div>
-                <span className="font-bold text-orange-600">3</span>
-              </div>
-            </div>
+              <LucideFileText size={16} />
+              PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition"
+            >
+              <LucideDownload size={16} />
+              Excel
+            </button>
           </div>
         </div>
 
-        {/* Report List */}
-        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Daftar Laporan
-            </h2>
-            <div className="flex gap-2">
-              {["all", "stock", "product", "transaction"].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setFilterType(type)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition ${
-                    filterType === type
-                      ? "bg-linear-to-r from-violet-500 to-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {type === "all"
-                    ? "Semua"
-                    : type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
-              ))}
+        {/* Filter dan Pencarian */}
+        <div className="bg-white rounded-2xl border border-purple-200 p-4 space-y-4">
+          <div className="flex flex-wrap gap-3 items-end">
+            {/* Search */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cari
+              </label>
+              <div className="relative">
+                <LucideSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="ID atau nama barang..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            {filteredReports.map((report) => (
-              <div
-                key={report.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition gap-3"
+            {/* Filter Kategori */}
+            <div className="w-40">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kategori
+              </label>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-md bg-white flex items-center justify-center shadow-sm">
-                    <LucideFileText className="text-purple-600" size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      {report.title}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      {report.period} •{" "}
-                      {new Date(report.date).toLocaleDateString("id-ID")}
-                    </p>
-                    <span
-                      className={`inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full ${getTypeColor(
-                        report.type,
-                      )}`}
-                    >
-                      {getTypeLabel(report.type)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 ml-14 sm:ml-0">
-                  {report.status === "ready" ? (
-                    <>
-                      <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600 hover:bg-purple-100 rounded-lg transition">
-                        <LucideEye size={16} /> Lihat
-                      </button>
-                      <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-100 rounded-lg transition">
-                        <LucideDownload size={16} /> Unduh
-                      </button>
-                    </>
-                  ) : (
-                    <span className="px-3 py-1.5 text-sm text-orange-600 bg-orange-100 rounded-lg">
-                      Processing...
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat === "all" ? "Semua" : cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter Status */}
+            <div className="w-40">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status Stok
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">Semua</option>
+                <option value="available">Tersedia</option>
+                <option value="low">Stok Rendah</option>
+                <option value="out">Habis</option>
+              </select>
+            </div>
+
+            {/* Tombol Reset */}
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200 transition"
+            >
+              <LucideX size={16} />
+              Reset
+            </button>
           </div>
         </div>
-      </main>
+
+        {/* Tabel Inventory */}
+        <div className="bg-white rounded-2xl border border-purple-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <LucidePackage size={20} className="text-purple-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Daftar Stok Barang
+            </h2>
+            <span className="ml-auto text-sm text-gray-500">
+              {filteredItems.length} item
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID Barang
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nama Barang
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Kategori
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stok
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Satuan
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Harga
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.id}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {item.name}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {item.category}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {item.stock}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {item.unit}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {formatCurrency(item.price)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          item.status === "available"
+                            ? "bg-green-100 text-green-800"
+                            : item.status === "low"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.status === "available"
+                          ? "Tersedia"
+                          : item.status === "low"
+                            ? "Stok Rendah"
+                            : "Habis"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredItems.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                Tidak ada data yang sesuai dengan filter.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 }

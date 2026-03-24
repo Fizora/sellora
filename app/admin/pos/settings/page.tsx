@@ -55,7 +55,9 @@ export default function PosSettingsPage() {
       <div className="p-4 mb-15 md:my-0 md:p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pengaturan Kasir</h1>
+          <h1 className="text-2xl font-bold text-gray-900 font-mono">
+            Pengaturan Kasir
+          </h1>
           <p className="text-gray-500">Konfigurasi preferensi kasir Anda</p>
         </div>
 
