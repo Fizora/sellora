@@ -5,16 +5,46 @@ import { useState } from "react";
 import {
   LucideFileText,
   LucideDownload,
-  LucidePrinter,
-  LucideCalendar,
   LucidePackage,
   LucideShoppingCart,
-  LucideDollarSign,
   LucideReceipt,
+  LucideDollarSign,
   LucideTrendingUp,
   LucideTrendingDown,
   LucideAlertTriangle,
+  LucideTable,
 } from "lucide-react";
+
+// Tipe data untuk setiap modul
+interface PosTransaction {
+  id: string;
+  date: string;
+  customer: string;
+  product: string;
+  quantity: number;
+  amount: number;
+  status: "completed" | "pending" | "cancelled";
+}
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  category: string;
+  stock: number;
+  unit: string;
+  price: number;
+  status: "available" | "low" | "out";
+}
+
+interface Invoice {
+  id: string;
+  date: string;
+  dueDate: string;
+  customer: string;
+  total: number;
+  paid: number;
+  status: "paid" | "partial" | "pending" | "overdue";
+}
 
 export default function AllReportDashboard() {
   const [dateRange, setDateRange] = useState<
@@ -28,61 +58,197 @@ export default function AllReportDashboard() {
     "invoice",
   ]);
 
-  // Dummy data untuk ringkasan
-  const overallStats = [
+  // Data dummy untuk POS
+  const [posTransactions] = useState<PosTransaction[]>([
     {
-      title: "Total Pendapatan",
-      value: "Rp 124.5 JT",
-      change: "+12.5%",
-      icon: <LucideDollarSign size={18} />,
-      gradient: "from-violet-600 to-purple-700",
+      id: "TRX-001",
+      date: "2025-03-24",
+      customer: "Umum",
+      product: "Hijab Rifa",
+      quantity: 2,
+      amount: 467000,
+      status: "completed",
     },
     {
-      title: "Transaksi",
-      value: "1,245",
-      change: "+8.2%",
-      icon: <LucideShoppingCart size={18} />,
-      gradient: "from-emerald-500 to-teal-600",
+      id: "TRX-002",
+      date: "2025-03-24",
+      customer: "Aisyah",
+      product: "Baju Muslim",
+      quantity: 1,
+      amount: 250000,
+      status: "completed",
     },
     {
-      title: "Produk Terjual",
-      value: "3,847",
-      change: "+5.3%",
-      icon: <LucidePackage size={18} />,
-      gradient: "from-amber-500 to-orange-600",
+      id: "TRX-003",
+      date: "2025-03-23",
+      customer: "Fatimah",
+      product: "Al-Qur'an Terjemah",
+      quantity: 1,
+      amount: 125000,
+      status: "completed",
     },
     {
-      title: "Faktur Tertunda",
-      value: "Rp 28.3 JT",
-      change: "-2.1%",
-      icon: <LucideReceipt size={18} />,
-      gradient: "from-blue-500 to-indigo-600",
-      negative: true,
+      id: "TRX-004",
+      date: "2025-03-23",
+      customer: "Umum",
+      product: "Sajadah",
+      quantity: 3,
+      amount: 210000,
+      status: "completed",
     },
-  ];
+    {
+      id: "TRX-005",
+      date: "2025-03-22",
+      customer: "Zahra",
+      product: "Hijab Rifa",
+      quantity: 1,
+      amount: 233500,
+      status: "pending",
+    },
+    {
+      id: "TRX-006",
+      date: "2025-03-21",
+      customer: "Rahma",
+      product: "Mukena",
+      quantity: 2,
+      amount: 700000,
+      status: "completed",
+    },
+    {
+      id: "TRX-007",
+      date: "2025-03-20",
+      customer: "Laili",
+      product: "Al-Qur'an Tajwid",
+      quantity: 1,
+      amount: 150000,
+      status: "cancelled",
+    },
+  ]);
 
-  // Data laporan per modul
-  const posReport = {
-    totalSales: "Rp 87.2 JT",
-    totalTransactions: 432,
-    averageTransaction: "Rp 201,852",
-    topProduct: "Hijab Rifa",
-    topProductSales: "Rp 23.4 JT",
-  };
+  // Data dummy untuk Inventory
+  const [inventoryItems] = useState<InventoryItem[]>([
+    {
+      id: "INV-001",
+      name: "Hijab Rifa",
+      category: "Pakaian",
+      stock: 45,
+      unit: "pcs",
+      price: 233500,
+      status: "available",
+    },
+    {
+      id: "INV-002",
+      name: "Baju Muslim",
+      category: "Pakaian",
+      stock: 12,
+      unit: "pcs",
+      price: 250000,
+      status: "low",
+    },
+    {
+      id: "INV-003",
+      name: "Al-Qur'an Terjemah",
+      category: "Buku",
+      stock: 0,
+      unit: "eks",
+      price: 125000,
+      status: "out",
+    },
+    {
+      id: "INV-004",
+      name: "Sajadah",
+      category: "Perlengkapan",
+      stock: 8,
+      unit: "lembar",
+      price: 70000,
+      status: "low",
+    },
+    {
+      id: "INV-005",
+      name: "Mukena",
+      category: "Pakaian",
+      stock: 23,
+      unit: "set",
+      price: 350000,
+      status: "available",
+    },
+    {
+      id: "INV-006",
+      name: "Tasbih Digital",
+      category: "Aksesoris",
+      stock: 15,
+      unit: "pcs",
+      price: 85000,
+      status: "available",
+    },
+    {
+      id: "INV-007",
+      name: "Sarung",
+      category: "Pakaian",
+      stock: 0,
+      unit: "pcs",
+      price: 120000,
+      status: "out",
+    },
+  ]);
 
-  const inventoryReport = {
-    totalProducts: 156,
-    totalStockValue: "Rp 89.7 JT",
-    lowStockItems: 23,
-    outOfStockItems: 5,
-  };
-
-  const invoiceReport = {
-    totalInvoices: 324,
-    totalPaid: "Rp 96.2 JT",
-    totalPending: "Rp 18.5 JT",
-    totalOverdue: "Rp 9.8 JT",
-  };
+  // Data dummy untuk Invoice
+  const [invoices] = useState<Invoice[]>([
+    {
+      id: "INV-2025-001",
+      date: "2025-03-20",
+      dueDate: "2025-03-27",
+      customer: "PT. Berkah Abadi",
+      total: 12500000,
+      paid: 5000000,
+      status: "partial",
+    },
+    {
+      id: "INV-2025-002",
+      date: "2025-03-15",
+      dueDate: "2025-03-22",
+      customer: "CV. Amanah Jaya",
+      total: 8750000,
+      paid: 8750000,
+      status: "paid",
+    },
+    {
+      id: "INV-2025-003",
+      date: "2025-03-10",
+      dueDate: "2025-03-17",
+      customer: "UD. Makmur",
+      total: 5000000,
+      paid: 0,
+      status: "pending",
+    },
+    {
+      id: "INV-2025-004",
+      date: "2025-03-05",
+      dueDate: "2025-03-12",
+      customer: "Fashion Store",
+      total: 15200000,
+      paid: 15200000,
+      status: "paid",
+    },
+    {
+      id: "INV-2025-005",
+      date: "2025-03-01",
+      dueDate: "2025-03-08",
+      customer: "Toko Qalbu",
+      total: 3500000,
+      paid: 0,
+      status: "overdue",
+    },
+    {
+      id: "INV-2025-006",
+      date: "2025-02-28",
+      dueDate: "2025-03-07",
+      customer: "Zahra Collection",
+      total: 6750000,
+      paid: 2000000,
+      status: "partial",
+    },
+  ]);
 
   // Toggle module selection
   const toggleModule = (module: string) => {
@@ -94,12 +260,66 @@ export default function AllReportDashboard() {
   };
 
   const handleExportPDF = () => {
-    alert("Export as PDF (demo)");
+    alert("Ekspor ke PDF (demo) - data yang ditampilkan akan diekspor");
   };
 
   const handleExportExcel = () => {
-    alert("Export as Excel (demo)");
+    alert("Ekspor ke Excel (demo) - data yang ditampilkan akan diekspor");
   };
+
+  // Helper format mata uang
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Hitung ringkasan dari data dummy (contoh untuk statistik)
+  const totalRevenue = posTransactions
+    .filter((tx) => tx.status === "completed")
+    .reduce((sum, tx) => sum + tx.amount, 0);
+  const totalTransactions = posTransactions.length;
+  const totalProductsSold = posTransactions.reduce(
+    (sum, tx) => sum + tx.quantity,
+    0,
+  );
+  const totalPendingInvoice = invoices
+    .filter((inv) => inv.status === "pending" || inv.status === "partial")
+    .reduce((sum, inv) => sum + (inv.total - inv.paid), 0);
+
+  const overallStats = [
+    {
+      title: "Total Pendapatan",
+      value: formatCurrency(totalRevenue),
+      change: "+12.5%",
+      icon: <LucideDollarSign size={18} />,
+      gradient: "from-violet-600 to-purple-700",
+    },
+    {
+      title: "Transaksi",
+      value: totalTransactions.toString(),
+      change: "+8.2%",
+      icon: <LucideShoppingCart size={18} />,
+      gradient: "from-emerald-500 to-teal-600",
+    },
+    {
+      title: "Produk Terjual",
+      value: totalProductsSold.toString(),
+      change: "+5.3%",
+      icon: <LucidePackage size={18} />,
+      gradient: "from-amber-500 to-orange-600",
+    },
+    {
+      title: "Faktur Tertunda",
+      value: formatCurrency(totalPendingInvoice),
+      change: "-2.1%",
+      icon: <LucideReceipt size={18} />,
+      gradient: "from-blue-500 to-indigo-600",
+      negative: true,
+    },
+  ];
 
   return (
     <DashboardLayout
@@ -245,158 +465,261 @@ export default function AllReportDashboard() {
           ))}
         </div>
 
-        {/* Module Reports */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* POS Report */}
-          {selectedModules.includes("pos") && (
-            <div className="bg-white rounded-2xl border border-purple-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <LucideShoppingCart size={20} className="text-purple-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Laporan POS
-                </h2>
+        {/* Tabel POS */}
+        {selectedModules.includes("pos") && (
+          <div className="bg-white rounded-2xl border border-purple-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <LucideShoppingCart size={20} className="text-purple-600" />
               </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Penjualan</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {posReport.totalSales}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Transaksi</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {posReport.totalTransactions}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Rata-rata Transaksi</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {posReport.averageTransaction}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Produk Terlaris</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {posReport.topProduct}
-                    </p>
-                    <p className="text-sm text-purple-600">
-                      {posReport.topProductSales}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Laporan Transaksi POS
+              </h2>
             </div>
-          )}
-
-          {/* Inventory Report */}
-          {selectedModules.includes("inventory") && (
-            <div className="bg-white rounded-2xl border border-purple-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <LucidePackage size={20} className="text-purple-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Inventory Report
-                </h2>
-              </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Produk</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {inventoryReport.totalProducts}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Nilai Stok</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {inventoryReport.totalStockValue}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <LucideAlertTriangle
-                        size={16}
-                        className="text-amber-500"
-                      />
-                      <p className="text-sm text-gray-500">Item Stok Rendah</p>
-                    </div>
-                    <p className="text-xl font-bold text-amber-600">
-                      {inventoryReport.lowStockItems}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <LucideTrendingDown size={16} className="text-red-500" />
-                      <p className="text-sm text-gray-500">Stok Habis</p>
-                    </div>
-                    <p className="text-xl font-bold text-red-600">
-                      {inventoryReport.outOfStockItems}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ID Transaksi
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tanggal
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Pelanggan
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Produk
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Jumlah
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {posTransactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {tx.id}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {tx.date}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {tx.customer}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {tx.product}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {tx.quantity}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(tx.amount)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            tx.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : tx.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {tx.status === "completed"
+                            ? "Selesai"
+                            : tx.status === "pending"
+                              ? "Pending"
+                              : "Dibatalkan"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-
-          {/* Invoice Report */}
-          {selectedModules.includes("invoice") && (
-            <div className="bg-white rounded-2xl border border-purple-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <LucideReceipt size={20} className="text-purple-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Invoice Report
-                </h2>
-              </div>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Total Faktur</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {invoiceReport.totalInvoices}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Jumlah Dibayar</p>
-                    <p className="text-xl font-bold text-emerald-600">
-                      {invoiceReport.totalPaid}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Jumlah Tertunda</p>
-                    <p className="text-xl font-bold text-amber-600">
-                      {invoiceReport.totalPending}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">Jumlah Terlambat</p>
-                    <p className="text-xl font-bold text-red-600">
-                      {invoiceReport.totalOverdue}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Additional Chart Section (optional) */}
-        <div className="bg-white rounded-2xl border border-purple-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Performance Trends
-          </h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-            <p className="text-gray-400">
-              Chart will be displayed here (e.g., revenue over selected period)
-            </p>
           </div>
-        </div>
+        )}
+
+        {/* Tabel Inventory */}
+        {selectedModules.includes("inventory") && (
+          <div className="bg-white rounded-2xl border border-purple-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <LucidePackage size={20} className="text-purple-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Laporan Stok Inventory
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ID Barang
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nama Barang
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kategori
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stok
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Satuan
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Harga
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {inventoryItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.id}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {item.name}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {item.category}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {item.stock}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {item.unit}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(item.price)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            item.status === "available"
+                              ? "bg-green-100 text-green-800"
+                              : item.status === "low"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.status === "available"
+                            ? "Tersedia"
+                            : item.status === "low"
+                              ? "Stok Rendah"
+                              : "Habis"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tabel Invoice */}
+        {selectedModules.includes("invoice") && (
+          <div className="bg-white rounded-2xl border border-purple-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <LucideReceipt size={20} className="text-purple-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Laporan Faktur (Invoice)
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      No. Faktur
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tanggal
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Jatuh Tempo
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Pelanggan
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Dibayar
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {inv.id}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {inv.date}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {inv.dueDate}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {inv.customer}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(inv.total)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(inv.paid)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            inv.status === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : inv.status === "partial"
+                                ? "bg-blue-100 text-blue-800"
+                                : inv.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {inv.status === "paid"
+                            ? "Lunas"
+                            : inv.status === "partial"
+                              ? "Sebagian"
+                              : inv.status === "pending"
+                                ? "Tertunda"
+                                : "Terlambat"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
