@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import {
   LucideLayoutDashboard,
@@ -15,12 +15,24 @@ import {
   LucideChevronsUpDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+
+interface UserProfile {
+  id: string;
+  email: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    picture?: string;
+  };
+}
 
 interface SidebarProps {
   mobileOpen?: boolean;
   onMobileToggle?: () => void;
   className?: string;
   title?: string;
+  user?: UserProfile | null;
 }
 
 // Item default dengan title mapping
@@ -56,10 +68,45 @@ export default function Sidebar({
   onMobileToggle,
   className = "",
   title,
+  user,
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(
+    user || null,
+  );
+
+  // Fetch user on mount if not provided
+  useEffect(() => {
+    if (!user) {
+      const fetchUser = async () => {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUser(user as UserProfile);
+        }
+      };
+      fetchUser();
+    }
+  }, [user]);
+
+  // Get user display name
+  const userName =
+    currentUser?.user_metadata?.full_name ||
+    currentUser?.email?.split("@")[0] ||
+    "User";
+  const userEmail = currentUser?.email || "";
+  const userAvatar =
+    currentUser?.user_metadata?.avatar_url ||
+    currentUser?.user_metadata?.picture ||
+    "";
+
+  // Get initials for avatar fallback
+  const userInitials = userName.charAt(0).toUpperCase();
 
   // Get current page title based on pathname
   const currentItem = defaultItems.find(
@@ -81,14 +128,22 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Placeholder functions for actions
+  // Handle settings click
   const handleSettings = () => {
-    console.log("Open settings");
+    router.push("/admin/settings");
     setUserMenuOpen(false);
   };
 
-  const handleSignOut = () => {
-    console.log("Sign out");
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/auth/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
     setUserMenuOpen(false);
   };
 
@@ -161,14 +216,20 @@ export default function Sidebar({
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
           >
-            <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">
-              A
-            </div>
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-10 h-10 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shrink-0">
+                {userInitials}
+              </div>
+            )}
             <div className="flex-1 min-w-0 text-left">
-              <p className="font-semibold text-gray-900 truncate">Admin</p>
-              <p className="text-xs text-gray-500 truncate">
-                admin@sellora.com
-              </p>
+              <p className="font-semibold text-gray-900 truncate">{userName}</p>
+              <p className="text-xs text-gray-500 truncate">{userEmail}</p>
             </div>
             <LucideChevronsUpDown
               size={16}
@@ -274,12 +335,20 @@ export default function Sidebar({
               </nav>
               <div className="p-4 border-t border-purple-200">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
-                  <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    A
-                  </div>
+                  {userAvatar ? (
+                    <img
+                      src={userAvatar}
+                      alt={userName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {userInitials}
+                    </div>
+                  )}
                   <div>
-                    <p className="font-semibold text-gray-900">Admin</p>
-                    <p className="text-xs text-gray-500">admin@sellora.com</p>
+                    <p className="font-semibold text-gray-900">{userName}</p>
+                    <p className="text-xs text-gray-500">{userEmail}</p>
                   </div>
                 </div>
               </div>

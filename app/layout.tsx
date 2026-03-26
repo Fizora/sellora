@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, Merriweather } from "next/font/google";
 import "./globals.css";

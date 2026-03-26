@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import {
   LucideSend,
   LucideArrowRight,
@@ -17,11 +20,26 @@ import {
   LucideStar,
   LucideMenu,
   LucideX,
+  LucideLogOut,
+  LucideLayoutDashboard,
 } from "lucide-react";
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Ambil sesi user saat ini
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    // Subscribe perubahan auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -190,20 +208,53 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-3">
-              <Link
-                href="/auth/login"
-                className="px-5 py-2.5 text-gray-700 font-semibold hover:text-purple-600 transition-colors"
-              >
-                Masuk
-              </Link>
-              <Link
-                href="/auth/register"
-                className="px-6 py-2.5 bg-linear-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-full shadow-lg shadow-purple-300 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
-              >
-                Mulai Sekarang
-                <LucideSend size={16} />
-              </Link>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-xl">
+                    <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 max-w-[140px] truncate">{user.email}</span>
+                  </div>
+                  <Link
+                    href="/admin/dashboard"
+                    className="px-4 py-2.5 text-gray-700 font-semibold hover:text-purple-600 transition-colors flex items-center gap-1.5"
+                  >
+                    <LucideLayoutDashboard size={16} />
+                    Dashboard
+                  </Link>
+                  <button
+                    id="btn-logout"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      router.push("/auth/login");
+                      router.refresh();
+                    }}
+                    className="px-4 py-2.5 text-red-600 font-semibold hover:bg-red-50 rounded-xl transition-colors flex items-center gap-1.5"
+                  >
+                    <LucideLogOut size={16} />
+                    Keluar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="px-5 py-2.5 text-gray-700 font-semibold hover:text-purple-600 transition-colors"
+                  >
+                    Masuk
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="px-6 py-2.5 bg-linear-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-full shadow-lg shadow-purple-300 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
+                  >
+                    Mulai Sekarang
+                    <LucideSend size={16} />
+                  </Link>
+                </>
+              )}
             </div>
+
 
             {/* Mobile Menu Button */}
             <button
