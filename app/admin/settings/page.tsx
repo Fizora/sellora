@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   LucideUser,
   LucideMail,
@@ -38,7 +39,8 @@ export default function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
 
-  // Password change state
+  // Password change state (placeholder for future implementation)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -169,9 +171,11 @@ export default function SettingsPage() {
           <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
             <div className="relative">
               {userAvatar ? (
-                <img
+                <Image
                   src={userAvatar}
                   alt={fullName || "User"}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -73,6 +74,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(
     user || null,
@@ -136,6 +138,7 @@ export default function Sidebar({
 
   // Handle sign out
   const handleSignOut = async () => {
+    setSigningOut(true);
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
@@ -143,6 +146,8 @@ export default function Sidebar({
       router.refresh();
     } catch (error) {
       console.error("Sign out error:", error);
+    } finally {
+      setSigningOut(false);
     }
     setUserMenuOpen(false);
   };
@@ -217,9 +222,11 @@ export default function Sidebar({
             className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
           >
             {userAvatar ? (
-              <img
+              <Image
                 src={userAvatar}
                 alt={userName}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover shrink-0"
               />
             ) : (
@@ -256,10 +263,15 @@ export default function Sidebar({
                 </button>
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  disabled={signingOut}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
                 >
-                  <LucideLogOut size={16} />
-                  <span>Sign out</span>
+                  {signingOut ? (
+                    <LucideLoader2 size={16} className="animate-spin" />
+                  ) : (
+                    <LucideLogOut size={16} />
+                  )}
+                  <span>{signingOut ? "Keluar..." : "Sign out"}</span>
                 </button>
               </motion.div>
             )}
@@ -336,9 +348,11 @@ export default function Sidebar({
               <div className="p-4 border-t border-purple-200">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
                   {userAvatar ? (
-                    <img
+                    <Image
                       src={userAvatar}
                       alt={userName}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (

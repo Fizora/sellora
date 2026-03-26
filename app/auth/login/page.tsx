@@ -15,7 +15,12 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    // Get error from URL on initial render - no need for useEffect
+    const errorParam = searchParams.get("error");
+    const errorDescription = searchParams.get("error_description");
+    return errorParam || errorDescription || null;
+  });
 
   // Check if user is already logged in and redirect to dashboard
   useEffect(() => {
@@ -29,17 +34,6 @@ function LoginContent() {
     };
     checkUser();
   }, [supabase, router]);
-
-  // Check for error in URL from callback
-  useEffect(() => {
-    const errorParam = searchParams.get("error");
-    const errorDescription = searchParams.get("error_description");
-    if (errorParam || errorDescription) {
-      setError(
-        errorDescription || errorParam || "Terjadi kesalahan saat login",
-      );
-    }
-  }, [searchParams]);
 
   // ─── Login dengan Google (OAuth) ───────────────────────────────
   const handleGoogleLogin = async () => {
