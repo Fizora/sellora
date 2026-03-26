@@ -55,6 +55,7 @@ function LoginContent() {
       });
 
       console.log("OAuth response:", { data, error });
+      console.log("Current origin:", window.location.origin);
 
       if (error) {
         console.error("OAuth error:", error);
