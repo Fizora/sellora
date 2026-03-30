@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LucideCode,
   LucidePlus,
@@ -9,92 +9,66 @@ import {
   LucideEdit2,
   LucideTrash2,
   LucideHash,
+  LucideX,
+  LucideSave,
+  LucideAlertCircle,
 } from "lucide-react";
-
-interface CodeProduct {
-  id: string;
-  code: string;
-  productId: string;
-  productName: string;
-  barcode: string;
-  sku: string;
-  status: "active" | "inactive";
-  createdAt: string;
-}
-
-const initialCodeProducts: CodeProduct[] = [
-  {
-    id: "1",
-    code: "HJF-001",
-    productId: "1",
-    productName: "Hijab Rifa",
-    barcode: "899999900001",
-    sku: "HJF-RIFA-001",
-    status: "active",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    code: "HJF-002",
-    productId: "1",
-    productName: "Hijab Rifa",
-    barcode: "899999900002",
-    sku: "HJF-RIFA-002",
-    status: "active",
-    createdAt: "2024-01-16",
-  },
-  {
-    id: "3",
-    code: "MKN-001",
-    productId: "2",
-    productName: "Ori Mukenah",
-    barcode: "899999900003",
-    sku: "MKN-ORI-001",
-    status: "active",
-    createdAt: "2024-01-20",
-  },
-  {
-    id: "4",
-    code: "CPG-001",
-    productId: "3",
-    productName: "Cargo Loos Pants",
-    barcode: "899999900004",
-    sku: "CPG-CARGO-001",
-    status: "active",
-    createdAt: "2024-02-01",
-  },
-  {
-    id: "5",
-    code: "SDL-001",
-    productId: "4",
-    productName: "Sandal Wanita",
-    barcode: "899999900005",
-    sku: "SDL-WANITA-001",
-    status: "inactive",
-    createdAt: "2024-02-10",
-  },
-  {
-    id: "6",
-    code: "TSR-001",
-    productId: "5",
-    productName: "Tas Ransel",
-    barcode: "899999900006",
-    sku: "TSR-RANSEL-001",
-    status: "active",
-    createdAt: "2024-02-15",
-  },
-];
+import {
+  ProductCode,
+  Product,
+  getProductCodes,
+  getProducts,
+  createProductCode,
+  updateProductCode,
+  deleteProductCode,
+} from "@/lib/inventory";
 
 export default function CodeProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [codeProducts] = useState<CodeProduct[]>(initialCodeProducts);
+  const [codeProducts, setCodeProducts] = useState<ProductCode[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingCode, setEditingCode] = useState<ProductCode | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null,
+  );
 
-  const filteredCodeProducts = codeProducts.filter(
+  // Form state
+  const [formData, setFormData] = useState({
+    product_id: undefined as string | undefined,
+    code: "",
+    barcode: undefined as string | undefined,
+    sku: undefined as string | undefined,
+    status: "active" as "active" | "inactive",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [codesData, productsData] = await Promise.all([
+        getProductCodes(),
+        getProducts(),
+      ]);
+      setCodeProducts(codesData);
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredCodes = codeProducts.filter(
     (item) =>
       item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.barcode.includes(searchTerm) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.barcode?.includes(searchTerm) ||
+      item.sku?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const totalCodes = codeProducts.length;
@@ -111,18 +85,86 @@ export default function CodeProductPage() {
     {
       title: "Kode Aktif",
       value: activeCodes,
-      change: "+2",
+      change: "Active",
       icon: <LucideHash size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
       title: "Kode Nonaktif",
       value: totalCodes - activeCodes,
-      change: "-1",
+      change: "Inactive",
       icon: <LucideCode size={18} />,
       gradient: "from-red-500 to-rose-600",
     },
   ];
+
+  function openCreateModal() {
+    // Generate new code
+    const prefix = "CD";
+    const num = codeProducts.length + 1;
+    const newCode = `${prefix}-${String(num).padStart(4, "0")}`;
+
+    setFormData({
+      product_id: "",
+      code: newCode,
+      barcode: "",
+      sku: "",
+      status: "active",
+    });
+    setEditingCode(null);
+    setShowModal(true);
+  }
+
+  function openEditModal(code: ProductCode) {
+    setFormData({
+      product_id: code.product_id || "",
+      code: code.code,
+      barcode: code.barcode || "",
+      sku: code.sku || "",
+      status: code.status,
+    });
+    setEditingCode(code);
+    setShowModal(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      if (editingCode) {
+        await updateProductCode(editingCode.id, {
+          product_id: formData.product_id || undefined,
+          code: formData.code,
+          barcode: formData.barcode || undefined,
+          sku: formData.sku || undefined,
+          status: formData.status,
+        });
+      } else {
+        await createProductCode({
+          product_id: formData.product_id || undefined,
+          code: formData.code,
+          barcode: formData.barcode || undefined,
+          sku: formData.sku || undefined,
+          status: formData.status,
+        });
+      }
+      setShowModal(false);
+      loadData();
+    } catch (error) {
+      console.error("Error saving code:", error);
+      alert("Gagal menyimpan kode produk");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteProductCode(id);
+      setShowDeleteConfirm(null);
+      loadData();
+    } catch (error) {
+      console.error("Error deleting code:", error);
+      alert("Gagal menghapus kode produk");
+    }
+  }
 
   return (
     <DashboardLayout
@@ -160,7 +202,7 @@ export default function CodeProductPage() {
                 <p className="text-3xl sm:text-4xl font-bold mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
+                <p className="text-sm text-white/70">{stat.change}</p>
               </div>
             </div>
           ))}
@@ -186,92 +228,264 @@ export default function CodeProductPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-md transition-all">
+              <button
+                onClick={openCreateModal}
+                className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-md transition-all hover:opacity-90"
+              >
                 <LucidePlus size={18} />
                 Tambah Kode
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Kode
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Produk
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Barcode
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    SKU
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Tanggal
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCodeProducts.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
-                      {item.code}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.productName}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                      {item.barcode}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.sku}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          item.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {item.status === "active" ? "Aktif" : "Nonaktif"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(item.createdAt).toLocaleDateString("id-ID")}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="p-1.5 hover:bg-purple-100 text-purple-600 rounded-lg transition"
-                          title="Edit"
-                        >
-                          <LucideEdit2 size={16} />
-                        </button>
-                        <button
-                          className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition"
-                          title="Hapus"
-                        >
-                          <LucideTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Memuat data...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Kode
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Produk
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Barcode
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      SKU
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Tanggal
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Aksi
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCodes.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
+                        {item.code}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.product_name || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                        {item.barcode || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.sku || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            item.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.status === "active" ? "Aktif" : "Nonaktif"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(item.created_at).toLocaleDateString("id-ID")}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="p-1.5 hover:bg-purple-100 text-purple-600 rounded-lg transition"
+                            title="Edit"
+                          >
+                            <LucideEdit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => setShowDeleteConfirm(item.id)}
+                            className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition"
+                            title="Hapus"
+                          >
+                            <LucideTrash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredCodes.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm
+                    ? "Tidak ada kode yang cocok"
+                    : "Belum ada kode produk"}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Create/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                {editingCode ? "Edit Kode Produk" : "Tambah Kode Produk"}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <LucideX size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kode
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Produk (Opsional)
+                </label>
+                <select
+                  value={formData.product_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, product_id: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Tidak ada</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.code} - {product.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Barcode (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.barcode}
+                  onChange={(e) =>
+                    setFormData({ ...formData, barcode: e.target.value })
+                  }
+                  placeholder="Nomor barcode"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SKU (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.sku}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sku: e.target.value })
+                  }
+                  placeholder="SKU"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as "active" | "inactive",
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Nonaktif</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                >
+                  <LucideSave size={18} />
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <LucideAlertCircle className="text-red-600" size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Hapus Kode Produk?
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Tindakan ini tidak dapat dibatalkan
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleDelete(showDeleteConfirm)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

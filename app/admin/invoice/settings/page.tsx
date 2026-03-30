@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LucideFileText,
   LucideCalendar,
@@ -9,16 +9,25 @@ import {
   LucideBuilding,
   LucideMail,
   LucideSave,
-  LucideToggleLeft,
-  LucideToggleRight,
+  LucideLoader2,
+  LucideCheck,
+  LucidePlus,
+  LucideTrash2,
 } from "lucide-react";
+import {
+  getInvoiceSettings,
+  updateInvoiceSettings,
+  InvoiceSettings,
+} from "@/lib/invoice-settings";
 
 export default function InvoiceSettingsPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [settings, setSettings] = useState<InvoiceSettings | null>(null);
+
   // Invoice Format Settings
   const [invoicePrefix, setInvoicePrefix] = useState("INV");
   const [invoiceStartingNumber, setInvoiceStartingNumber] = useState(1000);
-  const [invoiceNumberFormat, setInvoiceNumberFormat] =
-    useState("{prefix}-{number}");
   const [invoiceDigits, setInvoiceDigits] = useState(4);
 
   // Payment Terms
@@ -47,13 +56,177 @@ export default function InvoiceSettingsPage() {
   const [sendReminderBeforeDue, setSendReminderBeforeDue] = useState(true);
   const [reminderDaysBefore, setReminderDaysBefore] = useState(3);
   const [sendEmailOnPayment, setSendEmailOnPayment] = useState(true);
-  const [adminEmail, setAdminEmail] = useState("admin@sellora.com");
 
-  const handleSaveInvoiceFormat = () => alert("Invoice format settings saved!");
-  const handleSavePaymentTerms = () => alert("Payment terms saved!");
-  const handleSaveTax = () => alert("Tax settings saved!");
-  const handleSaveCompany = () => alert("Company info saved!");
-  const handleSaveNotifications = () => alert("Notification settings saved!");
+  // Due Date Periods (like categories in inventory)
+  const [dueDatePeriods, setDueDatePeriods] = useState<
+    { id: string; days: number; label: string }[]
+  >([
+    { id: "1", days: 7, label: "7 Hari" },
+    { id: "2", days: 14, label: "14 Hari" },
+    { id: "3", days: 30, label: "1 Bulan" },
+    { id: "4", days: 60, label: "2 Bulan" },
+    { id: "5", days: 90, label: "3 Bulan" },
+  ]);
+  const [newPeriodDays, setNewPeriodDays] = useState("");
+  const [newPeriodLabel, setNewPeriodLabel] = useState("");
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  async function loadSettings() {
+    try {
+      setLoading(true);
+      const data = await getInvoiceSettings();
+      setSettings(data);
+
+      // Set form values
+      setInvoicePrefix(data.invoice_prefix);
+      setInvoiceStartingNumber(parseInt(data.invoice_starting_number));
+      setInvoiceDigits(parseInt(data.invoice_digits));
+      setDueDays(parseInt(data.default_due_days));
+      setEnableLateFee(data.enable_late_fee === "true");
+      setLateFeePercentage(parseInt(data.late_fee_percentage));
+      setLateFeeFixed(parseInt(data.late_fee_fixed));
+      setTaxRate(parseInt(data.tax_rate));
+      setTaxName(data.tax_name);
+      setTaxInclusive(data.tax_inclusive === "true");
+      setCompanyName(data.company_name);
+      setCompanyAddress(data.company_address);
+      setCompanyPhone(data.company_phone);
+      setCompanyEmail(data.company_email);
+      setCompanyTaxId(data.company_tax_id);
+      setSendEmailOnInvoiceCreated(
+        data.send_email_on_invoice_created === "true",
+      );
+      setSendReminderBeforeDue(data.send_reminder_before_due === "true");
+      setReminderDaysBefore(parseInt(data.reminder_days_before));
+      setSendEmailOnPayment(data.send_email_on_payment === "true");
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSaveInvoiceFormat() {
+    try {
+      setSaving("format");
+      await updateInvoiceSettings({
+        invoice_prefix: invoicePrefix,
+        invoice_starting_number: String(invoiceStartingNumber),
+        invoice_digits: String(invoiceDigits),
+      });
+      setTimeout(() => setSaving(null), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      setSaving(null);
+    }
+  }
+
+  async function handleSavePaymentTerms() {
+    try {
+      setSaving("payment");
+      await updateInvoiceSettings({
+        default_due_days: String(dueDays),
+        enable_late_fee: String(enableLateFee),
+        late_fee_percentage: String(lateFeePercentage),
+        late_fee_fixed: String(lateFeeFixed),
+      });
+      setTimeout(() => setSaving(null), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      setSaving(null);
+    }
+  }
+
+  const handleAddDueDatePeriod = async () => {
+    if (!newPeriodDays || !newPeriodLabel) return;
+    const days = parseInt(newPeriodDays);
+    if (isNaN(days) || days <= 0) {
+      alert("Harap masukkan jumlah hari yang valid");
+      return;
+    }
+    const newPeriod = {
+      id: Date.now().toString(),
+      days,
+      label: newPeriodLabel,
+    };
+    setDueDatePeriods([...dueDatePeriods, newPeriod]);
+    setNewPeriodDays("");
+    setNewPeriodLabel("");
+  };
+
+  const handleDeleteDueDatePeriod = (id: string) => {
+    setDueDatePeriods(dueDatePeriods.filter((p) => p.id !== id));
+  };
+
+  async function handleSaveTax() {
+    try {
+      setSaving("tax");
+      await updateInvoiceSettings({
+        tax_rate: String(taxRate),
+        tax_name: taxName,
+        tax_inclusive: String(taxInclusive),
+      });
+      setTimeout(() => setSaving(null), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      setSaving(null);
+    }
+  }
+
+  async function handleSaveCompany() {
+    try {
+      setSaving("company");
+      await updateInvoiceSettings({
+        company_name: companyName,
+        company_address: companyAddress,
+        company_phone: companyPhone,
+        company_email: companyEmail,
+        company_tax_id: companyTaxId,
+      });
+      setTimeout(() => setSaving(null), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      setSaving(null);
+    }
+  }
+
+  async function handleSaveNotifications() {
+    try {
+      setSaving("notifications");
+      await updateInvoiceSettings({
+        send_email_on_invoice_created: String(sendEmailOnInvoiceCreated),
+        send_reminder_before_due: String(sendReminderBeforeDue),
+        reminder_days_before: String(reminderDaysBefore),
+        send_email_on_payment: String(sendEmailOnPayment),
+      });
+      setTimeout(() => setSaving(null), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      setSaving(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout
+        config={{
+          title: "Pengaturan Faktur",
+          moduleItems: [
+            { label: "Faktur", href: "/admin/invoice" },
+            { label: "Analitik", href: "/admin/invoice/analytics" },
+            { label: "Pengaturan", href: "/admin/invoice/settings" },
+          ],
+        }}
+      >
+        <div className="flex items-center justify-center py-20">
+          <LucideLoader2 className="animate-spin text-purple-600" size={32} />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
@@ -116,25 +289,6 @@ export default function InvoiceSettingsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Format Nomor
-                </label>
-                <select
-                  value={invoiceNumberFormat}
-                  onChange={(e) => setInvoiceNumberFormat(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="{prefix}-{number}">{`{prefix}-{number}`}</option>
-                  <option value="{prefix}{number}">{`{prefix}{number}`}</option>
-                  <option value="{prefix}/{number}">{`{prefix}/{number}`}</option>
-                  <option value="{number}">{`{number}`}</option>
-                </select>
-                <p className="text-xs text-gray-400 mt-1">
-                  Preview: {invoicePrefix}-
-                  {String(invoiceStartingNumber).padStart(invoiceDigits, "0")}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Digit Nomor
                 </label>
                 <input
@@ -145,13 +299,24 @@ export default function InvoiceSettingsPage() {
                   min={1}
                   max={10}
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Preview: {invoicePrefix}-
+                  {String(invoiceStartingNumber).padStart(invoiceDigits, "0")}
+                </p>
               </div>
               <button
                 onClick={handleSaveInvoiceFormat}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                disabled={saving === "format"}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
               >
-                <LucideSave size={16} />
-                Save Changes
+                {saving === "format" ? (
+                  <LucideLoader2 className="animate-spin" size={16} />
+                ) : saving === "format_completed" ? (
+                  <LucideCheck size={16} />
+                ) : (
+                  <LucideSave size={16} />
+                )}
+                {saving === "format" ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>
@@ -189,7 +354,9 @@ export default function InvoiceSettingsPage() {
                 </div>
                 <button
                   onClick={() => setEnableLateFee(!enableLateFee)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${enableLateFee ? "bg-purple-600" : "bg-gray-300"}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                    enableLateFee ? "bg-purple-600" : "bg-gray-300"
+                  }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -223,19 +390,73 @@ export default function InvoiceSettingsPage() {
                       onChange={(e) => setLateFeeFixed(Number(e.target.value))}
                       className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Biaya akan diambil yang lebih besar antara persentase atau
-                      jumlah tetap
-                    </p>
                   </div>
                 </>
               )}
+
+              {/* Due Date Periods - Like Categories in Inventory */}
+              <div className="mt-6 pt-4 border-t border-purple-100">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Periode Jatuh Tempo
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Tambah periode jatuh tempo untuk dipilih saat membuat faktur
+                </p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newPeriodLabel}
+                    onChange={(e) => setNewPeriodLabel(e.target.value)}
+                    placeholder="Label (mis. 15 Hari)"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <input
+                    type="number"
+                    value={newPeriodDays}
+                    onChange={(e) => setNewPeriodDays(e.target.value)}
+                    placeholder="Hari"
+                    min="1"
+                    className="w-20 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    onClick={handleAddDueDatePeriod}
+                    disabled={!newPeriodDays || !newPeriodLabel}
+                    className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
+                  >
+                    <LucidePlus size={18} />
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {dueDatePeriods.map((period) => (
+                    <div
+                      key={period.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                    >
+                      <span className="text-sm text-gray-900">
+                        {period.label} ({period.days} hari)
+                      </span>
+                      <button
+                        onClick={() => handleDeleteDueDatePeriod(period.id)}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded transition"
+                      >
+                        <LucideTrash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <button
                 onClick={handleSavePaymentTerms}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                disabled={saving === "payment"}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
               >
-                <LucideSave size={16} />
-                Save Changes
+                {saving === "payment" ? (
+                  <LucideLoader2 className="animate-spin" size={16} />
+                ) : (
+                  <LucideSave size={16} />
+                )}
+                {saving === "payment" ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>
@@ -282,7 +503,9 @@ export default function InvoiceSettingsPage() {
                 </div>
                 <button
                   onClick={() => setTaxInclusive(!taxInclusive)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${taxInclusive ? "bg-purple-600" : "bg-gray-300"}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                    taxInclusive ? "bg-purple-600" : "bg-gray-300"
+                  }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -293,10 +516,15 @@ export default function InvoiceSettingsPage() {
               </div>
               <button
                 onClick={handleSaveTax}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                disabled={saving === "tax"}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
               >
-                <LucideSave size={16} />
-                Save Changes
+                {saving === "tax" ? (
+                  <LucideLoader2 className="animate-spin" size={16} />
+                ) : (
+                  <LucideSave size={16} />
+                )}
+                {saving === "tax" ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>
@@ -369,10 +597,15 @@ export default function InvoiceSettingsPage() {
               </div>
               <button
                 onClick={handleSaveCompany}
-                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+                disabled={saving === "company"}
+                className="mt-4 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
               >
-                <LucideSave size={16} />
-                Save Changes
+                {saving === "company" ? (
+                  <LucideLoader2 className="animate-spin" size={16} />
+                ) : (
+                  <LucideSave size={16} />
+                )}
+                {saving === "company" ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>
@@ -402,7 +635,11 @@ export default function InvoiceSettingsPage() {
                     onClick={() =>
                       setSendEmailOnInvoiceCreated(!sendEmailOnInvoiceCreated)
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${sendEmailOnInvoiceCreated ? "bg-purple-600" : "bg-gray-300"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                      sendEmailOnInvoiceCreated
+                        ? "bg-purple-600"
+                        : "bg-gray-300"
+                    }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -426,7 +663,9 @@ export default function InvoiceSettingsPage() {
                     onClick={() =>
                       setSendReminderBeforeDue(!sendReminderBeforeDue)
                     }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${sendReminderBeforeDue ? "bg-purple-600" : "bg-gray-300"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                      sendReminderBeforeDue ? "bg-purple-600" : "bg-gray-300"
+                    }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -465,7 +704,9 @@ export default function InvoiceSettingsPage() {
                   </div>
                   <button
                     onClick={() => setSendEmailOnPayment(!sendEmailOnPayment)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${sendEmailOnPayment ? "bg-purple-600" : "bg-gray-300"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                      sendEmailOnPayment ? "bg-purple-600" : "bg-gray-300"
+                    }`}
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -474,28 +715,19 @@ export default function InvoiceSettingsPage() {
                     />
                   </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Admin notification email
-                  </label>
-                  <input
-                    type="email"
-                    value={adminEmail}
-                    onChange={(e) => setAdminEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Receive copies of all invoice emails
-                  </p>
-                </div>
               </div>
             </div>
             <button
               onClick={handleSaveNotifications}
-              className="mt-6 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+              disabled={saving === "notifications"}
+              className="mt-6 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition disabled:opacity-50"
             >
-              <LucideSave size={16} />
-              Save All Notification Settings
+              {saving === "notifications" ? (
+                <LucideLoader2 className="animate-spin" size={16} />
+              ) : (
+                <LucideSave size={16} />
+              )}
+              {saving === "notifications" ? "Menyimpan..." : "Simpan Semua"}
             </button>
           </div>
         </div>

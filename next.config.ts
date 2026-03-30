@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Transpile packages that have issues with SSR
+  transpilePackages: ["jspdf", "fflate"],
 };
 
 export default nextConfig;

@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LucidePackage,
   LucidePlus,
@@ -10,115 +10,158 @@ import {
   LucideTrash2,
   LucideArrowDownLeft,
   LucideArrowUpRight,
+  LucideX,
+  LucideSave,
+  LucideAlertCircle,
 } from "lucide-react";
-
-interface StockItem {
-  id: string;
-  codeProduct: string;
-  productName: string;
-  category: string;
-  stockIn: number;
-  stockOut: number;
-  currentStock: number;
-  date: string;
-  type: "in" | "out";
-}
-
-const initialStockData: StockItem[] = [
-  {
-    id: "1",
-    codeProduct: "HJF-001",
-    productName: "Hijab Rifa",
-    category: "Hijab",
-    stockIn: 50,
-    stockOut: 10,
-    currentStock: 120,
-    date: "2024-03-15",
-    type: "in",
-  },
-  {
-    id: "2",
-    codeProduct: "MKN-001",
-    productName: "Ori Mukenah",
-    category: "Mukenah",
-    stockIn: 30,
-    stockOut: 5,
-    currentStock: 95,
-    date: "2024-03-14",
-    type: "in",
-  },
-  {
-    id: "3",
-    codeProduct: "CPG-001",
-    productName: "Cargo Loos Pants",
-    category: "Pants",
-    stockIn: 0,
-    stockOut: 20,
-    currentStock: 80,
-    date: "2024-03-13",
-    type: "out",
-  },
-  {
-    id: "4",
-    codeProduct: "SDL-001",
-    productName: "Sandal Wanita",
-    category: "Footwear",
-    stockIn: 25,
-    stockOut: 0,
-    currentStock: 65,
-    date: "2024-03-12",
-    type: "in",
-  },
-  {
-    id: "5",
-    codeProduct: "TSR-001",
-    productName: "Tas Ransel",
-    category: "Bags",
-    stockIn: 15,
-    stockOut: 5,
-    currentStock: 45,
-    date: "2024-03-11",
-    type: "in",
-  },
-];
+import {
+  Stock,
+  StockHistory,
+  Product,
+  getStock,
+  getProducts,
+  getStockHistory,
+  addStockIn,
+  addStockOut,
+} from "@/lib/inventory";
 
 export default function StockPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stockData] = useState<StockItem[]>(initialStockData);
+  const [stockData, setStockData] = useState<Stock[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [historyData, setHistoryData] = useState<StockHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<"in" | "out">("in");
+
+  // Form state
+  const [formData, setFormData] = useState({
+    product_id: "",
+    quantity: 0,
+    reference: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [stock, productsData, history] = await Promise.all([
+        getStock(),
+        getProducts(),
+        getStockHistory(),
+      ]);
+      setStockData(stock);
+      setProducts(productsData);
+      setHistoryData(history);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredStock = stockData.filter(
     (item) =>
-      item.codeProduct.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.product_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.product_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const totalStockIn = stockData.reduce((sum, item) => sum + item.stockIn, 0);
-  const totalStockOut = stockData.reduce((sum, item) => sum + item.stockOut, 0);
+  const totalStock = stockData.reduce((sum, item) => sum + item.quantity, 0);
+  const stockIn = historyData
+    .filter((h) => h.type === "in")
+    .reduce((sum, h) => sum + h.quantity, 0);
+  const stockOut = historyData
+    .filter((h) => h.type === "out")
+    .reduce((sum, h) => sum + Math.abs(h.quantity), 0);
 
   const stats = [
     {
       title: "Total Stok",
-      value: "405",
+      value: totalStock,
       change: "Units",
       icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
       title: "Masuk",
-      value: totalStockIn,
-      change: "+120",
+      value: stockIn,
+      change: "Total In",
       icon: <LucideArrowDownLeft size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
       title: "Keluar",
-      value: totalStockOut,
-      change: "-40",
+      value: stockOut,
+      change: "Total Out",
       icon: <LucideArrowUpRight size={18} />,
       gradient: "from-red-500 to-rose-600",
     },
   ];
+
+  function openStockInModal() {
+    setModalType("in");
+    setFormData({ product_id: "", quantity: 0, reference: "", notes: "" });
+    setShowModal(true);
+  }
+
+  function openStockOutModal() {
+    setModalType("out");
+    setFormData({ product_id: "", quantity: 0, reference: "", notes: "" });
+    setShowModal(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      if (modalType === "in") {
+        await addStockIn(
+          formData.product_id,
+          formData.quantity,
+          formData.reference,
+          formData.notes,
+        );
+      } else {
+        await addStockOut(
+          formData.product_id,
+          formData.quantity,
+          formData.reference,
+          formData.notes,
+        );
+      }
+      setShowModal(false);
+      loadData();
+    } catch (error) {
+      console.error("Error saving stock:", error);
+      alert("Gagal menyimpan data stock");
+    }
+  }
+
+  const getStockStatusStyle = (
+    quantity: number,
+    minQty?: number,
+    criticalQty?: number,
+  ) => {
+    if (quantity === 0) return "bg-gray-100 text-gray-700";
+    if (criticalQty && quantity <= criticalQty)
+      return "bg-red-100 text-red-700";
+    if (minQty && quantity <= minQty) return "bg-amber-100 text-amber-700";
+    return "bg-emerald-100 text-emerald-700";
+  };
+
+  const getStockStatusLabel = (
+    quantity: number,
+    minQty?: number,
+    criticalQty?: number,
+  ) => {
+    if (quantity === 0) return "Habis";
+    if (criticalQty && quantity <= criticalQty) return "Kritis";
+    if (minQty && quantity <= minQty) return "Rendah";
+    return "Tersedia";
+  };
 
   return (
     <DashboardLayout
@@ -156,7 +199,7 @@ export default function StockPage() {
                 <p className="text-3xl sm:text-4xl font-bold mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
+                <p className="text-sm text-white/70">{stat.change}</p>
               </div>
             </div>
           ))}
@@ -182,90 +225,265 @@ export default function StockPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-md transition-all">
-                <LucidePlus size={18} />
-                Tambah Stock
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={openStockInModal}
+                  className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md transition-all hover:opacity-90"
+                >
+                  <LucideArrowDownLeft size={18} />
+                  Stock In
+                </button>
+                <button
+                  onClick={openStockOutModal}
+                  className="flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md transition-all hover:opacity-90"
+                >
+                  <LucideArrowUpRight size={18} />
+                  Stock Out
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Kode Produk
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nama Produk
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Kategori
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Stock In
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Stock Out
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Sisa Stock
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Tanggal
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStock.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.codeProduct}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.productName}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.category}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
-                      +{item.stockIn}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
-                      -{item.stockOut}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                      {item.currentStock}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(item.date).toLocaleDateString("id-ID")}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="p-1.5 hover:bg-purple-100 text-purple-600 rounded-lg transition"
-                          title="Edit"
-                        >
-                          <LucideEdit2 size={16} />
-                        </button>
-                        <button
-                          className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition"
-                          title="Hapus"
-                        >
-                          <LucideTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Memuat data...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Kode Produk
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Nama Produk
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Lokasi
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Min. Stok
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Stok Kritis
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Sisa Stock
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredStock.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.product_code || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.product_name || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.location || "-"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.min_quantity}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.critical_quantity}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStockStatusStyle(item.quantity, item.min_quantity, item.critical_quantity)}`}
+                        >
+                          {getStockStatusLabel(
+                            item.quantity,
+                            item.min_quantity,
+                            item.critical_quantity,
+                          )}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredStock.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm
+                    ? "Tidak ada data yang cocok"
+                    : "Belum ada data stock"}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Recent History */}
+        {historyData.length > 0 && (
+          <div className="bg-white p-4 sm:p-6 rounded-2xl border border-purple-200">
+            <h2 className="text-xl font-semibold text-gray-800 font-mono mb-4">
+              Riwayat Terbaru
+            </h2>
+            <div className="space-y-3">
+              {historyData.slice(0, 10).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-full ${item.type === "in" ? "bg-emerald-100" : "bg-red-100"}`}
+                    >
+                      {item.type === "in" ? (
+                        <LucideArrowDownLeft
+                          className="text-emerald-600"
+                          size={16}
+                        />
+                      ) : (
+                        <LucideArrowUpRight
+                          className="text-red-600"
+                          size={16}
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {item.product_name || "Produk"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {item.reference_number &&
+                          `Ref: ${item.reference_number} • `}
+                        {new Date(item.created_at).toLocaleDateString("id-ID")}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`font-bold ${item.type === "in" ? "text-emerald-600" : "text-red-600"}`}
+                  >
+                    {item.type === "in" ? "+" : "-"}
+                    {Math.abs(item.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Stock In/Out Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                {modalType === "in"
+                  ? "Tambah Stock (In)"
+                  : "Kurangi Stock (Out)"}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <LucideX size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Produk
+                </label>
+                <select
+                  required
+                  value={formData.product_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, product_id: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Pilih Produk</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.code} - {product.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jumlah
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      quantity: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nomor Referensi (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.reference}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reference: e.target.value })
+                  }
+                  placeholder="Contoh: PO-001, Faktur-123"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Catatan (Opsional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white rounded-md transition ${
+                    modalType === "in"
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  <LucideSave size={18} />
+                  Simpan
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </main>
+      )}
     </DashboardLayout>
   );
 }

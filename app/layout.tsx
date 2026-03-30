@@ -1,6 +1,6 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, Merriweather } from "next/font/google";
+import { ToastProvider } from "@/app/components/toast";
 import "./globals.css";
 
 const fontSans = Geist({
@@ -51,7 +51,7 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontMono.variable} text-normal font-sans antialiased bg-gray-100 text-sm font-medium`}
       >
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

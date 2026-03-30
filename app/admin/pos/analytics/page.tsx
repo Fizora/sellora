@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,7 +24,14 @@ import {
   LucideCalendar,
   LucidePrinter,
   LucideUsers,
+  LucideLoader2,
 } from "lucide-react";
+import {
+  getPosSalesByPeriod,
+  getPosTopProducts,
+  getPosStats,
+  getPaymentMethodDistribution,
+} from "@/lib/pos-settings";
 
 ChartJS.register(
   CategoryScale,
@@ -41,44 +48,63 @@ ChartJS.register(
 
 export default function PosAnalyticsPage() {
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [loading, setLoading] = useState(true);
+  const [salesData, setSalesData] = useState<{
+    labels: string[];
+    sales: number[];
+    orders: number[];
+  }>({ labels: [], sales: [], orders: [] });
+  const [topProducts, setTopProducts] = useState<
+    { name: string; quantity: number }[]
+  >([]);
+  const [stats, setStats] = useState({
+    totalSales: 0,
+    totalOrders: 0,
+    averageOrder: 0,
+    uniqueCustomers: 0,
+  });
+  const [paymentMethodData, setPaymentMethodData] = useState<{
+    labels: string[];
+    data: number[];
+  }>({ labels: [], data: [] });
 
-  // Data dummy berdasarkan periode
-  const getSalesData = () => {
-    if (period === "daily") {
-      return {
-        labels: [
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-          "16:00",
-          "17:00",
-        ],
-        data: [1.2, 2.3, 3.1, 4.5, 5.2, 4.8, 3.9, 2.5, 1.8],
-      };
-    } else if (period === "weekly") {
-      return {
-        labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-        data: [2.1, 2.8, 3.2, 3.5, 4.2, 5.1, 4.3],
-      };
-    } else {
-      return {
-        labels: ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"],
-        data: [12.5, 15.2, 18.3, 20.1],
-      };
+  useEffect(() => {
+    loadData();
+  }, [period]);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [salesDataResult, topProductsResult, statsResult, paymentData] =
+        await Promise.all([
+          getPosSalesByPeriod(period),
+          getPosTopProducts(5),
+          getPosStats(),
+          getPaymentMethodDistribution(),
+        ]);
+      setSalesData(salesDataResult);
+      setTopProducts(topProductsResult);
+      setStats(statsResult);
+      setPaymentMethodData(paymentData);
+    } catch (error) {
+      console.error("Error loading analytics:", error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `Rp ${(value / 1000000).toFixed(1)} JT`;
+    if (value >= 1000) return `Rp ${(value / 1000).toFixed(0)}K`;
+    return `Rp ${value.toFixed(0)}`;
   };
 
-  const salesData = getSalesData();
   const salesChartData = {
     labels: salesData.labels,
     datasets: [
       {
         label: "Penjualan (Juta Rp)",
-        data: salesData.data,
+        data: salesData.sales,
         borderColor: "rgb(139, 92, 246)",
         backgroundColor: "rgba(139, 92, 246, 0.1)",
         tension: 0.4,
@@ -88,28 +114,29 @@ export default function PosAnalyticsPage() {
   };
 
   const topProductsData = {
-    labels: [
-      "Hijab Rifa",
-      "Ori Mukenah",
-      "Cargo Loos Pants",
-      "Sandal Wanita",
-      "Tas Ransel",
-    ],
+    labels: topProducts.map((p) => p.name),
     datasets: [
       {
         label: "Jumlah Terjual",
-        data: [45, 32, 28, 19, 12],
+        data: topProducts.map((p) => p.quantity),
         backgroundColor: "rgba(139, 92, 246, 0.7)",
         borderRadius: 8,
       },
     ],
   };
 
-  const paymentMethodData = {
-    labels: ["Tunai", "QRIS", "Debit", "Transfer"],
+  // Real data for payment method doughnut
+  const paymentDoughnutData = {
+    labels:
+      paymentMethodData.labels.length > 0
+        ? paymentMethodData.labels
+        : ["Tunai", "QRIS", "Kartu Debit", "Transfer"],
     datasets: [
       {
-        data: [55, 25, 15, 5],
+        data:
+          paymentMethodData.data.length > 0
+            ? paymentMethodData.data
+            : [0, 0, 0, 0],
         backgroundColor: [
           "rgba(139, 92, 246, 0.8)",
           "rgba(59, 130, 246, 0.8)",
@@ -153,32 +180,32 @@ export default function PosAnalyticsPage() {
     cutout: "70%",
   };
 
-  const stats = [
+  const statsCards = [
     {
       title: "Total Penjualan",
-      value: "Rp 3.8 JT",
-      change: "+18%",
+      value: loading ? "..." : formatCurrency(stats.totalSales),
+      change: "Total",
       icon: <LucideDollarSign size={18} />,
       gradient: "from-violet-600 to-purple-700",
     },
     {
       title: "Transaksi",
-      value: "24",
-      change: "+6",
+      value: loading ? "..." : stats.totalOrders.toString(),
+      change: "Pesanan",
       icon: <LucideShoppingCart size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
       title: "Rata-rata Transaksi",
-      value: "Rp 158K",
-      change: "+3%",
+      value: loading ? "..." : formatCurrency(stats.averageOrder),
+      change: "Per pesanan",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
       title: "Total Pelanggan",
-      value: "18",
-      change: "+2",
+      value: loading ? "..." : stats.uniqueCustomers.toString(),
+      change: "Pelanggan",
       icon: <LucideUsers size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
@@ -240,7 +267,7 @@ export default function PosAnalyticsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-          {stats.map((stat, idx) => (
+          {statsCards.map((stat, idx) => (
             <div
               key={idx}
               className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
@@ -266,50 +293,87 @@ export default function PosAnalyticsPage() {
         </div>
 
         {/* Sales Chart */}
-        <div className="bg-white rounded-2xl border border-purple-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900">Tren Penjualan</h3>
-            <LucideCalendar size={18} className="text-gray-400" />
+        {loading ? (
+          <div className="bg-white rounded-2xl border border-purple-200 p-4 h-80 flex items-center justify-center">
+            <LucideLoader2 className="animate-spin text-purple-600" size={32} />
           </div>
-          <div className="h-80">
-            <Line data={salesChartData} options={chartOptions} />
+        ) : (
+          <div className="bg-white rounded-2xl border border-purple-200 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900">Tren Penjualan</h3>
+              <LucideCalendar size={18} className="text-gray-400" />
+            </div>
+            <div className="h-80">
+              <Line data={salesChartData} options={chartOptions} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Top Products & Payment Methods */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">Produk Terlaris</h3>
-            <div className="h-72">
-              <Bar data={topProductsData} options={barOptions} />
-            </div>
+            {loading ? (
+              <div className="h-72 flex items-center justify-center">
+                <LucideLoader2
+                  className="animate-spin text-purple-600"
+                  size={32}
+                />
+              </div>
+            ) : topProducts.length > 0 ? (
+              <div className="h-72">
+                <Bar data={topProductsData} options={barOptions} />
+              </div>
+            ) : (
+              <div className="h-72 flex items-center justify-center text-gray-400">
+                Belum ada data produk
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">Metode Pembayaran</h3>
-            <div className="h-72">
-              <Doughnut data={paymentMethodData} options={doughnutOptions} />
-            </div>
+            {loading ? (
+              <div className="h-72 flex items-center justify-center">
+                <LucideLoader2
+                  className="animate-spin text-purple-600"
+                  size={32}
+                />
+              </div>
+            ) : paymentMethodData.data.length > 0 ? (
+              <div className="h-72">
+                <Doughnut
+                  data={paymentDoughnutData}
+                  options={doughnutOptions}
+                />
+              </div>
+            ) : (
+              <div className="h-72 flex items-center justify-center text-gray-400">
+                Belum ada data pembayaran
+              </div>
+            )}
           </div>
         </div>
 
         {/* Hourly Breakdown (if daily) */}
-        {period === "daily" && (
+        {period === "daily" && !loading && salesData.sales.length > 0 && (
           <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">
-              Volume Transaksi per Jam
+              Volume Transaksi per Hari
             </h3>
             <div className="space-y-3">
-              {salesData.labels.map((hour, i) => (
-                <div key={hour} className="flex items-center gap-4">
-                  <span className="w-16 text-sm text-gray-600">{hour}</span>
+              {salesData.labels.map((label, i) => (
+                <div key={label} className="flex items-center gap-4">
+                  <span className="w-16 text-sm text-gray-600">{label}</span>
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${(salesData.data[i] / 6) * 100}%` }}
+                      style={{
+                        width: `${Math.min((salesData.sales[i] / Math.max(...salesData.sales)) * 100, 100)}%`,
+                      }}
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
-                    Rp {salesData.data[i]}K
+                    Rp {(salesData.sales[i] * 1000000).toLocaleString("id-ID")}
                   </span>
                 </div>
               ))}

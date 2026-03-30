@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -23,6 +23,15 @@ import {
   LucideTrendingDown,
   LucideCalendar,
 } from "lucide-react";
+import {
+  getSalesStats,
+  getMonthlySales,
+  getOrders,
+  getTopSellingProducts,
+  getSalesByPeriod,
+  getOrderCountByStatus,
+} from "@/lib/sales";
+import { getInventoryStats, getCategoryDistribution } from "@/lib/inventory";
 
 ChartJS.register(
   CategoryScale,
@@ -41,48 +50,138 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">(
     "monthly",
   );
+  const [loading, setLoading] = useState(true);
+  const [salesData, setSalesData] = useState<number[]>([]);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    avgOrderValue: 0,
+    conversionRate: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<
+    { name: string; totalSold: number }[]
+  >([]);
+  const [categoryDistribution, setCategoryDistribution] = useState<
+    { name: string; count: number }[]
+  >([]);
+  const [orderStatus, setOrderStatus] = useState({
+    completed: 0,
+    pending: 0,
+    processing: 0,
+  });
 
-  // Data dummy berdasarkan periode
-  const getSalesData = () => {
-    if (period === "daily") {
-      return {
-        labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-        data: [12, 19, 15, 17, 24, 28, 22],
-      };
-    } else if (period === "weekly") {
-      return {
-        labels: ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"],
-        data: [85, 92, 110, 125],
-      };
-    } else {
-      return {
-        labels: [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "Mei",
-          "Jun",
-          "Jul",
-          "Agu",
-          "Sep",
-          "Okt",
-          "Nov",
-          "Des",
-        ],
-        data: [65, 78, 90, 85, 92, 88, 95, 102, 110, 105, 115, 125],
-      };
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    // Reload sales data when period changes
+    loadSalesByPeriod();
+  }, [period]);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [salesStats, monthly, orders, topProd, categories, orderCounts] =
+        await Promise.all([
+          getSalesStats(),
+          getMonthlySales(),
+          getOrders(),
+          getTopSellingProducts(5),
+          getCategoryDistribution(),
+          getOrderCountByStatus(),
+        ]);
+
+      setStats({
+        totalRevenue: salesStats.totalRevenue,
+        totalOrders: salesStats.totalOrders,
+        avgOrderValue:
+          salesStats.totalOrders > 0
+            ? Math.round(salesStats.totalRevenue / salesStats.totalOrders)
+            : 0,
+        conversionRate:
+          orderCounts.completed > 0
+            ? Math.round(
+                (orderCounts.completed /
+                  (orderCounts.completed +
+                    orderCounts.pending +
+                    orderCounts.processing)) *
+                  100 *
+                  10,
+              ) / 10
+            : 0,
+      });
+      setSalesData(monthly);
+      setRecentOrders(orders.slice(0, 10));
+      setTopProducts(topProd);
+      setCategoryDistribution(categories);
+      setOrderStatus(orderCounts);
+    } catch (error) {
+      console.error("Error loading analytics:", error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  async function loadSalesByPeriod() {
+    try {
+      const periodData = await getSalesByPeriod(period);
+      setSalesData(periodData.data);
+    } catch (error) {
+      console.error("Error loading sales by period:", error);
+    }
+  }
+
+  // Helper function to get month name
+  const getMonthName = (monthIndex: number) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return months[(monthIndex + 12) % 12];
   };
 
-  const salesData = getSalesData();
+  // Helper function to get day name for the last 7 days
+  const getLast7DaysLabels = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayName = date.toLocaleDateString("id-ID", { weekday: "short" });
+      days.push(dayName);
+    }
+    return days;
+  };
 
   const salesChartData = {
-    labels: salesData.labels,
+    labels:
+      period === "daily"
+        ? getLast7DaysLabels()
+        : period === "weekly"
+          ? ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"]
+          : [
+              getMonthName(new Date().getMonth() - 5),
+              getMonthName(new Date().getMonth() - 4),
+              getMonthName(new Date().getMonth() - 3),
+              getMonthName(new Date().getMonth() - 2),
+              getMonthName(new Date().getMonth() - 1),
+              getMonthName(new Date().getMonth()),
+            ],
     datasets: [
       {
         label: "Penjualan",
-        data: salesData.data,
+        data: salesData.length > 0 ? salesData : [0, 0, 0, 0, 0, 0],
         borderColor: "rgb(139, 92, 246)",
         backgroundColor: "rgba(139, 92, 246, 0.1)",
         tension: 0.4,
@@ -92,10 +191,16 @@ export default function AnalyticsPage() {
   };
 
   const categoryData = {
-    labels: ["Hijab", "Mukenah", "Pants", "Footwear", "Bags"],
+    labels:
+      categoryDistribution.length > 0
+        ? categoryDistribution.map((c) => c.name)
+        : ["Tidak ada data"],
     datasets: [
       {
-        data: [35, 25, 20, 12, 8],
+        data:
+          categoryDistribution.length > 0
+            ? categoryDistribution.map((c) => c.count)
+            : [1],
         backgroundColor: [
           "rgba(139, 92, 246, 0.8)",
           "rgba(59, 130, 246, 0.8)",
@@ -109,17 +214,15 @@ export default function AnalyticsPage() {
   };
 
   const topProductsData = {
-    labels: [
-      "Hijab Rifa",
-      "Ori Mukenah",
-      "Cargo Loos Pants",
-      "Sandal Wanita",
-      "Tas Ransel",
-    ],
+    labels:
+      topProducts.length > 0
+        ? topProducts.map((p) => p.name)
+        : ["Tidak ada produk"],
     datasets: [
       {
         label: "Terjual (unit)",
-        data: [125, 98, 76, 54, 32],
+        data:
+          topProducts.length > 0 ? topProducts.map((p) => p.totalSold) : [0],
         backgroundColor: "rgba(139, 92, 246, 0.6)",
         borderRadius: 8,
       },
@@ -158,36 +261,13 @@ export default function AnalyticsPage() {
     },
   };
 
-  const stats = [
-    {
-      title: "Total Penjualan",
-      value: "Rp 50.4M",
-      change: "+12.5%",
-      icon: <LucideDollarSign size={18} />,
-      gradient: "from-violet-500 to-purple-600",
-    },
-    {
-      title: "Pesanan",
-      value: "1,245",
-      change: "+8.2%",
-      icon: <LucideShoppingCart size={18} />,
-      gradient: "from-emerald-500 to-teal-600",
-    },
-    {
-      title: "Nilai Pesanan Rata-rata",
-      value: "Rp 40,500",
-      change: "+4.1%",
-      icon: <LucideTrendingUp size={18} />,
-      gradient: "from-amber-500 to-orange-600",
-    },
-    {
-      title: "Tingkat Konversi",
-      value: "3.2%",
-      change: "+0.5%",
-      icon: <LucideTrendingUp size={18} />,
-      gradient: "from-blue-500 to-indigo-600",
-    },
-  ];
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <DashboardLayout
@@ -247,29 +327,86 @@ export default function AnalyticsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-          {stats.map((stat, idx) => (
-            <div
-              key={idx}
-              className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                    {stat.icon}
-                  </div>
-                  <span className="text-white/80 text-sm font-medium">
-                    {stat.title}
-                  </span>
+          <div
+            className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-violet-500 to-purple-600 p-6 text-white`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <LucideDollarSign size={18} />
                 </div>
-                <p className="text-3xl sm:text-4xl font-bold mb-1">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
+                <span className="text-white/80 text-sm font-medium">
+                  Total Penjualan
+                </span>
               </div>
+              <p className="text-3xl sm:text-4xl font-bold mb-1">
+                {loading ? "..." : formatCurrency(stats.totalRevenue)}
+              </p>
+              <p className="text-sm text-emerald-200">+12.5%</p>
             </div>
-          ))}
+          </div>
+          <div
+            className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 p-6 text-white`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <LucideShoppingCart size={18} />
+                </div>
+                <span className="text-white/80 text-sm font-medium">
+                  Pesanan
+                </span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold mb-1">
+                {loading ? "..." : stats.totalOrders.toLocaleString("id-ID")}
+              </p>
+              <p className="text-sm text-emerald-200">+8.2%</p>
+            </div>
+          </div>
+          <div
+            className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-amber-500 to-orange-600 p-6 text-white`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <LucideTrendingUp size={18} />
+                </div>
+                <span className="text-white/80 text-sm font-medium">
+                  Nilai Pesanan Rata-rata
+                </span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold mb-1">
+                {loading ? "..." : formatCurrency(stats.avgOrderValue)}
+              </p>
+              <p className="text-sm text-emerald-200">+4.1%</p>
+            </div>
+          </div>
+          <div
+            className={`relative overflow-hidden rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 p-6 text-white`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-4 -translate-x-4" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <LucideTrendingUp size={18} />
+                </div>
+                <span className="text-white/80 text-sm font-medium">
+                  Tingkat Konversi
+                </span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold mb-1">
+                {loading ? "..." : stats.conversionRate + "%"}
+              </p>
+              <p className="text-sm text-emerald-200">+0.5%</p>
+            </div>
+          </div>
         </div>
 
         {/* Main Charts */}
@@ -300,57 +437,6 @@ export default function AnalyticsPage() {
           </h3>
           <div className="h-80">
             <Bar data={topProductsData} options={barOptions} />
-          </div>
-        </div>
-
-        {/* Additional Metrics */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">Akuisisi Pelanggan</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pelanggan Baru</span>
-                <span className="font-bold text-gray-900">+156</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full w-3/4"></div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pelanggan Kembali</span>
-                <span className="font-bold text-gray-900">+89</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-emerald-600 h-2 rounded-full w-1/2"></div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">
-              Pendapatan per Perangkat
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Seluler</span>
-                <span className="font-bold text-gray-900">65%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full w-[65%]"></div>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Desktop</span>
-                <span className="font-bold text-gray-900">30%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full w-[30%]"></div>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tablet</span>
-                <span className="font-bold text-gray-900">5%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full w-[5%]"></div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

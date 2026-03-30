@@ -1,62 +1,63 @@
 "use client";
 
-// app/admin/inventory/page.tsx
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
+import { useState, useEffect } from "react";
 import {
   LucidePackage,
   LucideTrendingUp,
   LucideAlertTriangle,
   LucideTags,
 } from "lucide-react";
+import {
+  ProductWithStock,
+  getProducts,
+  getInventoryStats,
+} from "@/lib/inventory";
 
 export default function Inventory() {
-  const inventoryItems = [
-    {
-      name: "Hijab Rifa",
-      category: "Hijab",
-      stock: 120,
-      price: 85000,
-      status: "In Stock",
-      emoji: "🧕",
-    },
-    {
-      name: "Ori Mukenah",
-      category: "Mukenah",
-      stock: 95,
-      price: 150000,
-      status: "In Stock",
-      emoji: "🧕",
-    },
-    {
-      name: "Cargo Loos",
-      category: "Pants",
-      stock: 80,
-      price: 200000,
-      status: "Low Stock",
-      emoji: "👖",
-    },
-    {
-      name: "Sandal Wanita",
-      category: "Footwear",
-      stock: 65,
-      price: 75000,
-      status: "Low Stock",
-      emoji: "👡",
-    },
-    {
-      name: "Tas Ransel",
-      category: "Bags",
-      stock: 45,
-      price: 250000,
-      status: "Critical",
-      emoji: "🎒",
-    },
-  ];
+  const [products, setProducts] = useState<ProductWithStock[]>([]);
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalCategories: 0,
+    totalValue: 0,
+    lowStock: 0,
+    criticalStock: 0,
+    outOfStock: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [productsData, statsData] = await Promise.all([
+        getProducts(),
+        getInventoryStats(),
+      ]);
+      setProducts(productsData);
+      setStats(statsData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const statusStyles: Record<string, string> = {
-    "In Stock": "bg-emerald-100 text-emerald-700",
-    "Low Stock": "bg-amber-100 text-amber-700",
-    Critical: "bg-red-100 text-red-700",
+    available: "bg-emerald-100 text-emerald-700",
+    low: "bg-amber-100 text-amber-700",
+    critical: "bg-red-100 text-red-700",
+    out: "bg-gray-100 text-gray-700",
+  };
+
+  const statusLabels: Record<string, string> = {
+    available: "Tersedia",
+    low: "Stok Rendah",
+    critical: "Kritis",
+    out: "Habis",
   };
 
   const formatCurrency = (amount: number) => {
@@ -67,31 +68,31 @@ export default function Inventory() {
     }).format(amount);
   };
 
-  const stats = [
+  const statCards = [
     {
       title: "Produk",
-      value: "156",
+      value: stats.totalProducts,
       change: "+5",
       icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
     },
     {
       title: "Nilai Stok",
-      value: "Rp 87.2M",
+      value: formatCurrency(stats.totalValue),
       change: "+12%",
       icon: <LucideTrendingUp size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
       title: "Stok Rendah",
-      value: "23",
+      value: stats.lowStock + stats.criticalStock,
       change: "-3",
       icon: <LucideAlertTriangle size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
       title: "Kategori",
-      value: "12",
+      value: stats.totalCategories,
       change: "+1",
       icon: <LucideTags size={18} />,
       gradient: "from-violet-500 to-purple-600",
@@ -121,9 +122,8 @@ export default function Inventory() {
         </div>
 
         {/* Stats Cards */}
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-          {stats.map((stat, index) => (
+          {statCards.map((stat, index) => (
             <div
               key={index}
               className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
@@ -142,7 +142,7 @@ export default function Inventory() {
                 <p className="text-3xl sm:text-4xl font-bold mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
+                <p className="text-sm text-white/70">{stat.change}</p>
               </div>
             </div>
           ))}
@@ -153,37 +153,57 @@ export default function Inventory() {
           <div className="p-4 border-b border-gray-100">
             <h3 className="font-bold text-gray-900">Daftar Produk</h3>
           </div>
-          <div className="divide-y divide-gray-50">
-            {inventoryItems.map((item, index) => (
-              <div
-                key={index}
-                className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-linear-to-br from-violet-100 to-purple-100 rounded-xl flex items-center justify-center text-2xl">
-                    {item.emoji}
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">Memuat data...</div>
+          ) : products.length > 0 ? (
+            <div className="divide-y divide-gray-50">
+              {products.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-linear-to-br from-violet-100 to-purple-100 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>📦</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.category_name || "Tanpa Kategori"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.category}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="font-bold text-gray-900">
+                        {formatCurrency(item.price)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {item.stock_quantity} unit
+                      </p>
+                    </div>
+                    <span
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full ${statusStyles[item.stock_status]}`}
+                    >
+                      {statusLabels[item.stock_status]}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="font-bold text-gray-900">
-                      {formatCurrency(item.price)}
-                    </p>
-                    <p className="text-xs text-gray-500">{item.stock} unit</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-full ${statusStyles[item.status]}`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              Belum ada produk. Silakan tambah produk di halaman Produk.
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

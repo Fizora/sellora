@@ -244,7 +244,7 @@ export default function SettingsPage() {
                 ) : (
                   <LucideSave className="w-5 h-5" />
                 )}
-                Save Changes
+                Simpan Perubahan
               </button>
             </div>
           </form>

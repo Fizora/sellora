@@ -1,274 +1,224 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LucideFileText,
   LucideDownload,
   LucidePackage,
   LucideShoppingCart,
   LucideReceipt,
+  LucideLoader2,
+  LucidePrinter,
 } from "lucide-react";
-
-// Tipe data untuk setiap modul
-interface PosTransaction {
-  id: string;
-  date: string;
-  customer: string;
-  product: string;
-  quantity: number;
-  amount: number;
-  status: "completed" | "pending" | "cancelled";
-}
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  category: string;
-  stock: number;
-  unit: string;
-  price: number;
-  status: "available" | "low" | "out";
-}
-
-interface Invoice {
-  id: string;
-  date: string;
-  dueDate: string;
-  customer: string;
-  total: number;
-  paid: number;
-  status: "paid" | "partial" | "pending" | "overdue";
-}
+import { getOrders, Order, OrderItem } from "@/lib/sales";
+import {
+  getProducts,
+  getStockHistory,
+  ProductWithStock,
+  StockHistory,
+} from "@/lib/inventory";
+import { getInvoices } from "@/lib/invoice";
+import * as XLSX from "xlsx";
 
 export default function AllReportDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<ProductWithStock[]>([]);
+  const [stockHistory, setStockHistory] = useState<StockHistory[]>([]);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printTarget, setPrintTarget] = useState<string>("");
+
   const [dateRange, setDateRange] = useState<
     "today" | "week" | "month" | "custom"
-  >("week");
+  >("month");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
-  const [selectedModules, setSelectedModules] = useState<string[]>([
-    "pos",
-    "inventory",
-    "invoice",
-  ]);
 
-  // Data dummy untuk POS
-  const [posTransactions] = useState<PosTransaction[]>([
-    {
-      id: "TRX-001",
-      date: "2025-03-24",
-      customer: "Umum",
-      product: "Hijab Rifa",
-      quantity: 2,
-      amount: 467000,
-      status: "completed",
-    },
-    {
-      id: "TRX-002",
-      date: "2025-03-24",
-      customer: "Aisyah",
-      product: "Baju Muslim",
-      quantity: 1,
-      amount: 250000,
-      status: "completed",
-    },
-    {
-      id: "TRX-003",
-      date: "2025-03-23",
-      customer: "Fatimah",
-      product: "Al-Qur'an Terjemah",
-      quantity: 1,
-      amount: 125000,
-      status: "completed",
-    },
-    {
-      id: "TRX-004",
-      date: "2025-03-23",
-      customer: "Umum",
-      product: "Sajadah",
-      quantity: 3,
-      amount: 210000,
-      status: "completed",
-    },
-    {
-      id: "TRX-005",
-      date: "2025-03-22",
-      customer: "Zahra",
-      product: "Hijab Rifa",
-      quantity: 1,
-      amount: 233500,
-      status: "pending",
-    },
-    {
-      id: "TRX-006",
-      date: "2025-03-21",
-      customer: "Rahma",
-      product: "Mukena",
-      quantity: 2,
-      amount: 700000,
-      status: "completed",
-    },
-    {
-      id: "TRX-007",
-      date: "2025-03-20",
-      customer: "Laili",
-      product: "Al-Qur'an Tajwid",
-      quantity: 1,
-      amount: 150000,
-      status: "cancelled",
-    },
-  ]);
+  const inventoryRef = useRef<HTMLDivElement>(null);
+  const salesRef = useRef<HTMLDivElement>(null);
+  const stockInRef = useRef<HTMLDivElement>(null);
 
-  // Data dummy untuk Inventory
-  const [inventoryItems] = useState<InventoryItem[]>([
-    {
-      id: "INV-001",
-      name: "Hijab Rifa",
-      category: "Pakaian",
-      stock: 45,
-      unit: "pcs",
-      price: 233500,
-      status: "available",
-    },
-    {
-      id: "INV-002",
-      name: "Baju Muslim",
-      category: "Pakaian",
-      stock: 12,
-      unit: "pcs",
-      price: 250000,
-      status: "low",
-    },
-    {
-      id: "INV-003",
-      name: "Al-Qur'an Terjemah",
-      category: "Buku",
-      stock: 0,
-      unit: "eks",
-      price: 125000,
-      status: "out",
-    },
-    {
-      id: "INV-004",
-      name: "Sajadah",
-      category: "Perlengkapan",
-      stock: 8,
-      unit: "lembar",
-      price: 70000,
-      status: "low",
-    },
-    {
-      id: "INV-005",
-      name: "Mukena",
-      category: "Pakaian",
-      stock: 23,
-      unit: "set",
-      price: 350000,
-      status: "available",
-    },
-    {
-      id: "INV-006",
-      name: "Tasbih Digital",
-      category: "Aksesoris",
-      stock: 15,
-      unit: "pcs",
-      price: 85000,
-      status: "available",
-    },
-    {
-      id: "INV-007",
-      name: "Sarung",
-      category: "Pakaian",
-      stock: 0,
-      unit: "pcs",
-      price: 120000,
-      status: "out",
-    },
-  ]);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  // Data dummy untuk Invoice
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: "INV-2025-001",
-      date: "2025-03-20",
-      dueDate: "2025-03-27",
-      customer: "PT. Berkah Abadi",
-      total: 12500000,
-      paid: 5000000,
-      status: "partial",
-    },
-    {
-      id: "INV-2025-002",
-      date: "2025-03-15",
-      dueDate: "2025-03-22",
-      customer: "CV. Amanah Jaya",
-      total: 8750000,
-      paid: 8750000,
-      status: "paid",
-    },
-    {
-      id: "INV-2025-003",
-      date: "2025-03-10",
-      dueDate: "2025-03-17",
-      customer: "UD. Makmur",
-      total: 5000000,
-      paid: 0,
-      status: "pending",
-    },
-    {
-      id: "INV-2025-004",
-      date: "2025-03-05",
-      dueDate: "2025-03-12",
-      customer: "Fashion Store",
-      total: 15200000,
-      paid: 15200000,
-      status: "paid",
-    },
-    {
-      id: "INV-2025-005",
-      date: "2025-03-01",
-      dueDate: "2025-03-08",
-      customer: "Toko Qalbu",
-      total: 3500000,
-      paid: 0,
-      status: "overdue",
-    },
-    {
-      id: "INV-2025-006",
-      date: "2025-02-28",
-      dueDate: "2025-03-07",
-      customer: "Zahra Collection",
-      total: 6750000,
-      paid: 2000000,
-      status: "partial",
-    },
-  ]);
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [productsData, stockData, ordersData, invoicesData] =
+        await Promise.all([
+          getProducts(),
+          getStockHistory(),
+          getOrders(),
+          getInvoices(),
+        ]);
 
-  // Toggle module selection
-  const toggleModule = (module: string) => {
-    setSelectedModules((prev) =>
-      prev.includes(module)
-        ? prev.filter((m) => m !== module)
-        : [...prev, module],
-    );
-  };
+      // Get order items from orders
+      const allOrderItems: any[] = [];
+      for (const order of ordersData) {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data: items } = await supabase
+          .from("order_items")
+          .select("*")
+          .eq("order_id", order.id);
 
-  const handleExportPDF = () => {
-    alert("Ekspor ke PDF (demo) - data yang ditampilkan akan diekspor");
-  };
+        if (items && items.length > 0) {
+          items.forEach((item: OrderItem) => {
+            allOrderItems.push({
+              ...item,
+              order_date: order.created_at,
+              order_number: order.order_number,
+              customer_name: order.customer_name,
+              tax_amount: order.tax_amount,
+              notes: order.notes,
+            });
+          });
+        }
+      }
 
-  const handleExportExcel = () => {
-    alert("Ekspor ke Excel (demo) - data yang ditampilkan akan diekspor");
-  };
+      setProducts(productsData);
+      setStockHistory(stockData);
+      setOrders(ordersData);
+      setOrderItems(allOrderItems);
+      setInvoices(invoicesData);
+    } catch (error) {
+      console.error("Error loading report data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  // Helper format mata uang
+  // Filter stock history
+  const stockInData = stockHistory.filter((item) => item.type === "in");
+  const stockOutData = stockHistory.filter((item) => item.type === "out");
+
+  // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
     }).format(value);
+  };
+
+  // Get status label
+  const getStockStatusLabel = (status: string) => {
+    switch (status) {
+      case "available":
+        return "Tersedia";
+      case "low":
+        return "Rendah";
+      case "critical":
+        return "Kritis";
+      case "out":
+        return "Habis";
+      default:
+        return status;
+    }
+  };
+
+  // Get status class
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case "available":
+        return "bg-green-100 text-green-800";
+      case "low":
+        return "bg-yellow-100 text-yellow-800";
+      case "critical":
+        return "bg-orange-100 text-orange-800";
+      case "out":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Export to Excel functions
+  const exportInventoryExcel = () => {
+    const data = products.map((product, index) => {
+      const qtyOut = stockOutData
+        .filter((s) => s.product_id === product.id)
+        .reduce((sum, s) => sum + s.quantity, 0);
+      const qtyIn = stockInData
+        .filter((s) => s.product_id === product.id)
+        .reduce((sum, s) => sum + s.quantity, 0);
+      const initialStock = (product.stock_quantity || 0) - qtyIn + qtyOut;
+
+      return {
+        No: index + 1,
+        "Kode Produk": product.code,
+        Produk: product.name,
+        "Qty Awal": initialStock,
+        "Qty Keluar": qtyOut,
+        "Stok Saat Ini": product.stock_quantity || 0,
+        HPP: product.cost_price || 0,
+        "Harga Jual": product.price || 0,
+        "Minimum Stock": product.min_quantity || 0,
+        Status: getStockStatusLabel(product.stock_status),
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventory");
+    XLSX.writeFile(wb, "laporan-inventory.xlsx");
+  };
+
+  const exportSalesExcel = () => {
+    const data = orderItems.map((item) => ({
+      Tanggal: new Date(item.order_date).toLocaleDateString("id-ID"),
+      "No Invoice": item.order_number || "-",
+      "Kode Produk": item.product_code || "-",
+      Produk: item.product_name || "-",
+      Qty: item.quantity,
+      Harga: item.unit_price,
+      Total: item.subtotal,
+      Pajak: 0,
+      "Nama Pelanggan": item.customer_name || "Umum",
+      Keterangan: item.notes || "-",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Penjualan");
+    XLSX.writeFile(wb, "laporan-penjualan.xlsx");
+  };
+
+  const exportStockInExcel = () => {
+    const data = stockInData.map((item, index) => {
+      const product = products.find((p) => p.id === item.product_id);
+      const totalValue = (product?.cost_price || 0) * item.quantity;
+
+      return {
+        No: index + 1,
+        Produk: item.product_name || "-",
+        "Kode Produk": item.product_code || "-",
+        "Qty Masuk": item.quantity,
+        Total: totalValue,
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Stok Masuk");
+    XLSX.writeFile(wb, "laporan-stok-masuk.xlsx");
+  };
+
+  // Print functions
+  const handlePrint = (target: string) => {
+    setPrintTarget(target);
+    setShowPrintModal(true);
+  };
+
+  const confirmPrint = () => {
+    setShowPrintModal(false);
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   return (
@@ -282,68 +232,82 @@ export default function AllReportDashboard() {
         ],
       }}
     >
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-area,
+          .print-area * {
+            visibility: visible;
+          }
+          .print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+          table {
+            font-size: 10px;
+          }
+          th {
+            color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      `}</style>
+
       <div className="p-4 mb-15 md:my-0 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 font-mono">
-              All Reports
+              Laporan Lengkap
             </h1>
             <p className="text-gray-500">
-              Laporan komprehensif di seluruh modul
+              {loading
+                ? "Memuat data..."
+                : "Laporan komprehensif di seluruh modul"}
             </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition"
-            >
-              <LucideFileText size={16} />
-              PDF
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition"
-            >
-              <LucideDownload size={16} />
-              Excel
-            </button>
           </div>
         </div>
 
-        {/* Date Range & Module Filters */}
-        <div className="bg-white rounded-2xl border border-purple-200 p-4 space-y-4">
-          <div className="flex flex-wrap gap-4 items-center justify-between">
-            <div className="flex flex-wrap gap-2">
-              {["today", "week", "month", "custom"].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setDateRange(range as any)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition ${
-                    dateRange === range
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {range === "today"
-                    ? "Hari Ini"
-                    : range === "week"
-                      ? "Minggu Ini"
-                      : range === "month"
-                        ? "Bulan Ini"
-                        : "Kustom"}
-                </button>
-              ))}
-            </div>
+        {/* Date Range Filter */}
+        <div className="bg-white rounded-2xl border border-purple-200 p-4">
+          <div className="flex flex-wrap gap-2">
+            {["today", "week", "month", "custom"].map((range) => (
+              <button
+                key={range}
+                onClick={() => setDateRange(range as any)}
+                className={`px-3 py-1.5 text-sm rounded-md transition ${
+                  dateRange === range
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {range === "today"
+                  ? "Hari Ini"
+                  : range === "week"
+                    ? "Minggu Ini"
+                    : range === "month"
+                      ? "Bulan Ini"
+                      : "Kustom"}
+              </button>
+            ))}
             {dateRange === "custom" && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   className="px-3 py-1.5 border border-gray-200 rounded-md text-sm"
                 />
-                <span className="text-gray-500">to</span>
+                <span className="text-gray-500">s/d</span>
                 <input
                   type="date"
                   value={customEndDate}
@@ -353,289 +317,413 @@ export default function AllReportDashboard() {
               </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={selectedModules.includes("pos")}
-                onChange={() => toggleModule("pos")}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-              POS
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={selectedModules.includes("inventory")}
-                onChange={() => toggleModule("inventory")}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-              Inventory
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={selectedModules.includes("invoice")}
-                onChange={() => toggleModule("invoice")}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-              Invoice
-            </label>
-          </div>
         </div>
 
-        {/* Tabel POS */}
-        {selectedModules.includes("pos") && (
-          <div className="bg-white rounded-2xl border border-purple-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <LucideShoppingCart size={20} className="text-purple-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Laporan Transaksi POS
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID Transaksi
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tanggal
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Pelanggan
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Produk
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Jumlah
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {posTransactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {tx.id}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {tx.date}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {tx.customer}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {tx.product}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {tx.quantity}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {formatCurrency(tx.amount)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            tx.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : tx.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {tx.status === "completed"
-                            ? "Selesai"
-                            : tx.status === "pending"
-                              ? "Pending"
-                              : "Dibatalkan"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <LucideLoader2 className="animate-spin text-purple-600" size={32} />
           </div>
+        ) : (
+          <>
+            {/* 1. Inventory Summary */}
+            <div
+              ref={inventoryRef}
+              className={`bg-white rounded-2xl border border-purple-200 p-6 ${printTarget === "inventory" ? "print-area" : ""}`}
+            >
+              <div className="flex items-center justify-between mb-4 no-print">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <LucidePackage size={20} className="text-purple-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Ringkasan Inventory
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePrint("inventory")}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucidePrinter size={14} /> PDF
+                  </button>
+                  <button
+                    onClick={exportInventoryExcel}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucideDownload size={14} /> Excel
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        No
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Kode Produk
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Produk
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Qty Awal
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Qty Keluar
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Stok Saat Ini
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        HPP
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Harga Jual
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Min Stock
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.length > 0 ? (
+                      products.map((product, index) => {
+                        const qtyOut = stockOutData
+                          .filter((s) => s.product_id === product.id)
+                          .reduce((sum, s) => sum + s.quantity, 0);
+                        const qtyIn = stockInData
+                          .filter((s) => s.product_id === product.id)
+                          .reduce((sum, s) => sum + s.quantity, 0);
+                        const initialStock =
+                          (product.stock_quantity || 0) - qtyIn + qtyOut;
+
+                        return (
+                          <tr key={product.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                              {index + 1}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {product.code}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {product.name}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              {initialStock}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              {qtyOut}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                              {product.stock_quantity || 0}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              {formatCurrency(product.cost_price || 0)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              {formatCurrency(product.price || 0)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              {product.min_quantity || 0}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(product.stock_status)}`}
+                              >
+                                {getStockStatusLabel(product.stock_status)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          className="px-3 py-8 text-center text-gray-500"
+                        >
+                          Tidak ada data produk
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 2. Sales Report */}
+            <div
+              ref={salesRef}
+              className={`bg-white rounded-2xl border border-purple-200 p-6 ${printTarget === "sales" ? "print-area" : ""}`}
+            >
+              <div className="flex items-center justify-between mb-4 no-print">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <LucideShoppingCart size={20} className="text-purple-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Laporan Daftar Penjualan
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePrint("sales")}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucidePrinter size={14} /> PDF
+                  </button>
+                  <button
+                    onClick={exportSalesExcel}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucideDownload size={14} /> Excel
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Tanggal
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        No Invoice
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Kode Produk
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Produk
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Qty
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Harga
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Total
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Pajak
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Nama Pelanggan
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Keterangan
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orderItems.length > 0 ? (
+                      orderItems.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(item.order_date).toLocaleDateString(
+                              "id-ID",
+                            )}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {item.order_number || "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                            {item.product_code || "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                            {item.product_name || "-"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {item.quantity}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {formatCurrency(item.unit_price)}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                            {formatCurrency(item.subtotal)}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {formatCurrency(0)}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                            {item.customer_name || "Umum"}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                            {item.notes || "-"}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          className="px-3 py-8 text-center text-gray-500"
+                        >
+                          Tidak ada data penjualan
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 3. Stock In */}
+            <div
+              ref={stockInRef}
+              className={`bg-white rounded-2xl border border-purple-200 p-6 ${printTarget === "stockin" ? "print-area" : ""}`}
+            >
+              <div className="flex items-center justify-between mb-4 no-print">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <LucideReceipt size={20} className="text-purple-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Stok Barang Masuk
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePrint("stockin")}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucidePrinter size={14} /> PDF
+                  </button>
+                  <button
+                    onClick={exportStockInExcel}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-200 rounded-md text-purple-600 hover:bg-purple-50 transition text-sm"
+                  >
+                    <LucideDownload size={14} /> Excel
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        No
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Produk
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-bold text-red-700 uppercase">
+                        Kode Produk
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Qty Masuk
+                      </th>
+                      <th className="px-3 py-2 text-right text-xs font-bold text-red-700 uppercase">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {stockInData.length > 0 ? (
+                      stockInData.map((item, index) => {
+                        const product = products.find(
+                          (p) => p.id === item.product_id,
+                        );
+                        const totalValue =
+                          (product?.cost_price || 0) * item.quantity;
+
+                        return (
+                          <tr key={item.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                              {index + 1}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {item.product_name || "-"}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                              {item.product_code || "-"}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                              +{item.quantity}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                              {formatCurrency(totalValue)}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-3 py-8 text-center text-gray-500"
+                        >
+                          Tidak ada data stok masuk
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
 
-        {/* Tabel Inventory */}
-        {selectedModules.includes("inventory") && (
-          <div className="bg-white rounded-2xl border border-purple-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <LucidePackage size={20} className="text-purple-600" />
+        {/* Print Modal */}
+        {showPrintModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Konfirmasi Print
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Pilih laporan yang akan diprint:
+              </p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setPrintTarget("inventory");
+                    confirmPrint();
+                  }}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-purple-50 rounded-lg transition border border-gray-200"
+                >
+                  Ringkasan Inventory
+                </button>
+                <button
+                  onClick={() => {
+                    setPrintTarget("sales");
+                    confirmPrint();
+                  }}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-purple-50 rounded-lg transition border border-gray-200"
+                >
+                  Laporan Daftar Penjualan
+                </button>
+                <button
+                  onClick={() => {
+                    setPrintTarget("stockin");
+                    confirmPrint();
+                  }}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-purple-50 rounded-lg transition border border-gray-200"
+                >
+                  Stok Barang Masuk
+                </button>
+                <button
+                  onClick={() => {
+                    setPrintTarget("all");
+                    confirmPrint();
+                  }}
+                  className="w-full text-left px-4 py-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition border border-purple-300 text-purple-700 font-medium"
+                >
+                  Semua Laporan
+                </button>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Laporan Stok Inventory
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID Barang
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nama Barang
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Kategori
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stok
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Satuan
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Harga
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {inventoryItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.id}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {item.name}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {item.category}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {item.stock}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {item.unit}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {formatCurrency(item.price)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            item.status === "available"
-                              ? "bg-green-100 text-green-800"
-                              : item.status === "low"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.status === "available"
-                            ? "Tersedia"
-                            : item.status === "low"
-                              ? "Stok Rendah"
-                              : "Habis"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Tabel Invoice */}
-        {selectedModules.includes("invoice") && (
-          <div className="bg-white rounded-2xl border border-purple-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <LucideReceipt size={20} className="text-purple-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Laporan Faktur (Invoice)
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      No. Faktur
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tanggal
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Jatuh Tempo
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Pelanggan
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Dibayar
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {inv.id}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {inv.date}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {inv.dueDate}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {inv.customer}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {formatCurrency(inv.total)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {formatCurrency(inv.paid)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            inv.status === "paid"
-                              ? "bg-green-100 text-green-800"
-                              : inv.status === "partial"
-                                ? "bg-blue-100 text-blue-800"
-                                : inv.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {inv.status === "paid"
-                            ? "Lunas"
-                            : inv.status === "partial"
-                              ? "Sebagian"
-                              : inv.status === "pending"
-                                ? "Tertunda"
-                                : "Terlambat"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <button
+                onClick={() => setShowPrintModal(false)}
+                className="mt-4 w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-700"
+              >
+                Batal
+              </button>
             </div>
           </div>
         )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,7 +24,17 @@ import {
   LucideUsers,
   LucideClock,
   LucideAlertTriangle,
+  LucideLoader2,
+  LucideCheckCircle,
 } from "lucide-react";
+import {
+  getInvoiceSalesByPeriod,
+  getInvoiceTopCustomers,
+  getInvoiceStatusDistribution,
+  getInvoiceStats,
+  SalesByPeriod,
+  TopCustomer,
+} from "@/lib/invoice-settings";
 
 ChartJS.register(
   CategoryScale,
@@ -41,48 +51,82 @@ ChartJS.register(
 
 export default function InvoiceAnalyticsPage() {
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [loading, setLoading] = useState(true);
+  const [salesData, setSalesData] = useState<SalesByPeriod>({
+    labels: [],
+    sales: [],
+    orders: [],
+  });
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState({
+    paid: 0,
+    pending: 0,
+    partial: 0,
+    overdue: 0,
+    debt: 0,
+  });
+  const [stats, setStats] = useState({
+    totalInvoices: 0,
+    paidInvoices: 0,
+    pendingInvoices: 0,
+    partialInvoices: 0,
+    debtInvoices: 0,
+    totalRevenue: 0,
+    paidRevenue: 0,
+    pendingRevenue: 0,
+    partialRevenue: 0,
+    debtRevenue: 0,
+    averageInvoiceValue: 0,
+  });
 
-  // Dummy data berdasarkan periode
-  const getInvoiceData = () => {
-    if (period === "daily") {
-      return {
-        labels: [
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-          "16:00",
-          "17:00",
-        ],
-        invoices: [2, 3, 4, 5, 6, 5, 4, 3, 2],
-        revenue: [1.2, 2.1, 2.8, 3.5, 4.2, 3.8, 3.0, 2.2, 1.5],
-      };
-    } else if (period === "weekly") {
-      return {
-        labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-        invoices: [4, 5, 6, 7, 8, 6, 5],
-        revenue: [2.5, 3.2, 3.8, 4.5, 5.2, 4.0, 3.1],
-      };
-    } else {
-      return {
-        labels: ["Minggu 1", "Minggu 2", "Minggu 3", "Minggu 4"],
-        invoices: [18, 22, 25, 30],
-        revenue: [12.5, 15.2, 18.3, 21.5],
-      };
+  useEffect(() => {
+    loadData();
+  }, [period]);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const [sales, customers, status, invoiceStats] = await Promise.all([
+        getInvoiceSalesByPeriod(period),
+        getInvoiceTopCustomers(5),
+        getInvoiceStatusDistribution(),
+        getInvoiceStats(),
+      ]);
+      setSalesData(sales);
+      setTopCustomers(customers);
+      setStatusDistribution(status);
+      setStats(invoiceStats);
+    } catch (error) {
+      console.error("Error loading invoice analytics:", error);
+      // Use empty defaults on error
+      setSalesData({ labels: [], sales: [], orders: [] });
+      setTopCustomers([]);
+      setStatusDistribution({
+        paid: 0,
+        pending: 0,
+        partial: 0,
+        overdue: 0,
+        debt: 0,
+      });
+    } finally {
+      setLoading(false);
     }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
-  const data = getInvoiceData();
-
   const invoiceTrendData = {
-    labels: data.labels,
+    labels: salesData.labels,
     datasets: [
       {
         label: "Jumlah Invoice",
-        data: data.invoices,
+        data: salesData.orders,
         borderColor: "rgb(139, 92, 246)",
         backgroundColor: "rgba(139, 92, 246, 0.1)",
         tension: 0.4,
@@ -91,7 +135,7 @@ export default function InvoiceAnalyticsPage() {
       },
       {
         label: "Revenue (Juta Rp)",
-        data: data.revenue,
+        data: salesData.sales,
         borderColor: "rgb(34, 197, 94)",
         backgroundColor: "rgba(34, 197, 94, 0.1)",
         tension: 0.4,
@@ -102,14 +146,22 @@ export default function InvoiceAnalyticsPage() {
   };
 
   const statusDistributionData = {
-    labels: ["Lunas", "Tertunda", "Jatuh Tempo"],
+    labels: ["Lunas", "Tertunda", "Dibayar Sebagian", "Jatuh Tempo", "Ngutang"],
     datasets: [
       {
-        data: [68, 22, 10],
+        data: [
+          statusDistribution.paid,
+          statusDistribution.pending,
+          statusDistribution.partial,
+          statusDistribution.overdue,
+          statusDistribution.debt,
+        ],
         backgroundColor: [
-          "rgba(139, 92, 246, 0.8)",
+          "rgba(34, 197, 94, 0.8)",
           "rgba(251, 191, 36, 0.8)",
+          "rgba(59, 130, 246, 0.8)",
           "rgba(239, 68, 68, 0.8)",
+          "rgba(168, 85, 247, 0.8)",
         ],
         borderWidth: 0,
       },
@@ -117,17 +169,11 @@ export default function InvoiceAnalyticsPage() {
   };
 
   const topCustomersData = {
-    labels: [
-      "John Doe",
-      "Jane Smith",
-      "Ahmad Fauzi",
-      "Siti Aminah",
-      "Budi Santoso",
-    ],
+    labels: topCustomers.map((c) => c.name),
     datasets: [
       {
         label: "Total Belanja (Juta Rp)",
-        data: [12.5, 9.8, 7.2, 5.5, 4.0],
+        data: topCustomers.map((c) => c.total),
         backgroundColor: "rgba(139, 92, 246, 0.7)",
         borderRadius: 8,
       },
@@ -176,34 +222,34 @@ export default function InvoiceAnalyticsPage() {
     cutout: "70%",
   };
 
-  const stats = [
+  const statsCards = [
     {
       title: "Total Faktur",
-      value: "156",
-      change: "+12",
+      value: loading ? "..." : stats.totalInvoices,
+      change: "Invoices",
       icon: <LucideFileText size={18} />,
       gradient: "from-violet-600 to-purple-700",
     },
     {
-      title: "Total Pendapatan",
-      value: "Rp 124.5 JT",
-      change: "+18%",
-      icon: <LucideDollarSign size={18} />,
+      title: "Faktur Lunas",
+      value: loading ? "..." : stats.paidInvoices,
+      change: "Lunas",
+      icon: <LucideCheckCircle size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Rata-rata Nilai",
-      value: "Rp 798K",
-      change: "+5%",
-      icon: <LucideTrendingUp size={18} />,
+      title: "Faktur Tertunda",
+      value: loading ? "..." : stats.pendingInvoices,
+      change: "Tertunda",
+      icon: <LucideClock size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
-      title: "Jumlah Terlambat",
-      value: "Rp 8.2 JT",
-      change: "-2%",
+      title: "Faktur Dibayar Sebagian",
+      value: loading ? "..." : stats.partialInvoices,
+      change: "Sebagian",
       icon: <LucideAlertTriangle size={18} />,
-      gradient: "from-red-500 to-rose-600",
+      gradient: "from-blue-500 to-blue-600",
     },
   ];
 
@@ -263,7 +309,7 @@ export default function InvoiceAnalyticsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-          {stats.map((stat, idx) => (
+          {statsCards.map((stat, idx) => (
             <div
               key={idx}
               className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${stat.gradient} p-6 text-white`}
@@ -282,71 +328,60 @@ export default function InvoiceAnalyticsPage() {
                 <p className="text-3xl sm:text-4xl font-bold mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-emerald-200">{stat.change}</p>
+                <p className="text-sm text-white/70">{stat.change}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Invoice & Revenue Trend */}
-        <div className="bg-white rounded-2xl border border-purple-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900">
-              Tren Faktur & Pendapatan
-            </h3>
-            <LucideCalendar size={18} className="text-gray-400" />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <LucideLoader2 className="animate-spin text-purple-600" size={32} />
           </div>
-          <div className="h-80">
-            <Line data={invoiceTrendData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Status Distribution & Top Customers */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">
-              Distribusi Status Faktur
-            </h3>
-            <div className="h-72">
-              <Doughnut
-                data={statusDistributionData}
-                options={doughnutOptions}
-              />
+        ) : (
+          <>
+            {/* Invoice & Revenue Trend */}
+            <div className="bg-white rounded-2xl border border-purple-200 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">
+                  Tren Faktur & Pendapatan
+                </h3>
+                <LucideCalendar size={18} className="text-gray-400" />
+              </div>
+              <div className="h-80">
+                <Line data={invoiceTrendData} options={chartOptions} />
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">
-              Pelanggan Teratas berdasarkan Pengeluaran
-            </h3>
-            <div className="h-72">
-              <Bar data={topCustomersData} options={barOptions} />
-            </div>
-          </div>
-        </div>
 
-        {/* Additional Insights (if daily) */}
-        {period === "daily" && (
-          <div className="bg-white rounded-2xl border border-purple-200 p-4">
-            <h3 className="font-bold text-gray-900 mb-4">
-              Distribusi Faktur per Jam
-            </h3>
-            <div className="space-y-3">
-              {data.labels.map((hour, i) => (
-                <div key={hour} className="flex items-center gap-4">
-                  <span className="w-16 text-sm text-gray-600">{hour}</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${(data.invoices[i] / 8) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    {data.invoices[i]} faktur
-                  </span>
+            {/* Status Distribution & Top Customers */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border border-purple-200 p-4">
+                <h3 className="font-bold text-gray-900 mb-4">
+                  Distribusi Status Faktur
+                </h3>
+                <div className="h-72">
+                  <Doughnut
+                    data={statusDistributionData}
+                    options={doughnutOptions}
+                  />
                 </div>
-              ))}
+              </div>
+              <div className="bg-white rounded-2xl border border-purple-200 p-4">
+                <h3 className="font-bold text-gray-900 mb-4">
+                  Pelanggan Teratas berdasarkan Pengeluaran
+                </h3>
+                <div className="h-72">
+                  {topCustomers.length > 0 ? (
+                    <Bar data={topCustomersData} options={barOptions} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      Data tidak tersedia
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </DashboardLayout>

@@ -2,6 +2,7 @@
 
 // app/dashboard/page.tsx
 import { DashboardLayout } from "@/app/components/layout/dashboard-layout";
+import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,7 +22,11 @@ import {
   LucideShoppingCart,
   LucideUsers,
   LucideDollarSign,
+  LucidePackage,
+  LucideAlertTriangle,
 } from "lucide-react";
+import { getInventoryStats, getCategoryDistribution } from "@/lib/inventory";
+import { getSalesStats, getOrders, getMonthlySales } from "@/lib/sales";
 
 // Register ChartJS components
 ChartJS.register(
@@ -38,9 +43,86 @@ ChartJS.register(
 );
 
 export default function Dashboard() {
-  // Data dummy untuk chart
-  const monthlySalesData = {
-    labels: [
+  const [inventoryStats, setInventoryStats] = useState({
+    totalProducts: 0,
+    totalCategories: 0,
+    totalValue: 0,
+    lowStock: 0,
+    criticalStock: 0,
+    outOfStock: 0,
+  });
+  const [salesStats, setSalesStats] = useState({
+    totalOrders: 0,
+    todaySales: 0,
+    monthSales: 0,
+    totalRevenue: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [monthlySalesData, setMonthlySalesData] = useState<number[]>([]);
+  const [categoryDistribution, setCategoryDistribution] = useState<
+    { name: string; count: number }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+
+      // Fetch all data with error handling for each
+      const [invStats, sales, orders, monthly, categories] = await Promise.all([
+        getInventoryStats().catch((err) => {
+          console.error("Error fetching inventory stats:", err);
+          return {
+            totalProducts: 0,
+            totalCategories: 0,
+            totalValue: 0,
+            lowStock: 0,
+            criticalStock: 0,
+            outOfStock: 0,
+          };
+        }),
+        getSalesStats().catch((err) => {
+          console.error("Error fetching sales stats:", err);
+          return {
+            totalOrders: 0,
+            todaySales: 0,
+            monthSales: 0,
+            totalRevenue: 0,
+          };
+        }),
+        getOrders().catch((err) => {
+          console.error("Error fetching orders:", err);
+          return [];
+        }),
+        getMonthlySales().catch((err) => {
+          console.error("Error fetching monthly sales:", err);
+          return [];
+        }),
+        getCategoryDistribution().catch((err) => {
+          console.error("Error fetching category distribution:", err);
+          return [];
+        }),
+      ]);
+
+      setInventoryStats(invStats);
+      setSalesStats(sales);
+      setRecentOrders(orders.slice(0, 5));
+      setMonthlySalesData(monthly);
+      setCategoryDistribution(categories);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Helper function to get month name
+  const getMonthName = (monthIndex: number) => {
+    const months = [
       "Jan",
       "Feb",
       "Mar",
@@ -53,11 +135,26 @@ export default function Dashboard() {
       "Oct",
       "Nov",
       "Dec",
+    ];
+    return months[(monthIndex + 12) % 12];
+  };
+
+  const monthlySalesChartData = {
+    labels: [
+      getMonthName(new Date().getMonth() - 5),
+      getMonthName(new Date().getMonth() - 4),
+      getMonthName(new Date().getMonth() - 3),
+      getMonthName(new Date().getMonth() - 2),
+      getMonthName(new Date().getMonth() - 1),
+      getMonthName(new Date().getMonth()),
     ],
     datasets: [
       {
         label: "Sales",
-        data: [65, 78, 90, 85, 92, 88, 95, 102, 110, 105, 115, 125],
+        data:
+          monthlySalesData.length > 0
+            ? monthlySalesData
+            : [65, 78, 90, 85, 92, 88],
         borderColor: "rgb(139, 92, 246)",
         backgroundColor: "rgba(139, 92, 246, 0.1)",
         tension: 0.4,
@@ -67,16 +164,25 @@ export default function Dashboard() {
   };
 
   const categoryData = {
-    labels: ["Hijab", "Mukenah", "Pants", "Footwear", "Bags"],
+    labels:
+      categoryDistribution.length > 0
+        ? categoryDistribution.map((c) => c.name)
+        : ["Hijab", "Mukenah", "Pants", "Footwear", "Bags"],
     datasets: [
       {
-        data: [35, 25, 20, 12, 8],
+        data:
+          categoryDistribution.length > 0
+            ? categoryDistribution.map((c) => c.count)
+            : [35, 25, 20, 12, 8],
         backgroundColor: [
           "rgba(139, 92, 246, 0.8)",
           "rgba(59, 130, 246, 0.8)",
           "rgba(34, 197, 94, 0.8)",
           "rgba(251, 191, 36, 0.8)",
           "rgba(236, 72, 153, 0.8)",
+          "rgba(249, 115, 22, 0.8)",
+          "rgba(16, 185, 129, 0.8)",
+          "rgba(244, 63, 94, 0.8)",
         ],
         borderWidth: 0,
       },
@@ -116,59 +222,48 @@ export default function Dashboard() {
   const stats = [
     {
       title: "Total Penjualan",
-      value: "Rp 50.4M",
-      change: "+12.5%",
+      value: loading ? "..." : formatCurrency(salesStats.totalRevenue),
+      change: salesStats.totalOrders + " pesanan",
       icon: <LucideDollarSign size={18} />,
       gradient: "from-violet-500 to-purple-600",
     },
     {
-      title: "Pesanan",
-      value: "1,245",
-      change: "+8.2%",
+      title: "Penjualan Hari Ini",
+      value: loading ? "..." : formatCurrency(salesStats.todaySales),
+      change: "Hari ini",
       icon: <LucideShoppingCart size={18} />,
       gradient: "from-emerald-500 to-teal-600",
     },
     {
-      title: "Pelanggan",
-      value: "892",
-      change: "+5.3%",
+      title: "Bulan Ini",
+      value: loading ? "..." : formatCurrency(salesStats.monthSales),
+      change: "Total bulan ini",
       icon: <LucideUsers size={18} />,
       gradient: "from-amber-500 to-orange-600",
     },
     {
       title: "Produk",
-      value: "3,847",
-      change: "-2.1%",
-      icon: <LucideTrendingUp size={18} />,
+      value: loading ? "..." : inventoryStats.totalProducts.toString(),
+      change: inventoryStats.totalCategories + " kategori",
+      icon: <LucidePackage size={18} />,
       gradient: "from-blue-500 to-indigo-600",
-      negative: true,
-    },
-  ];
-
-  const recentOrders = [
-    {
-      id: "#INV-001",
-      customer: "John Doe",
-      amount: "Rp 420,000",
-      status: "completed",
     },
     {
-      id: "#INV-002",
-      customer: "Jane Smith",
-      amount: "Rp 200,000",
-      status: "pending",
+      title: "Nilai Stok",
+      value: loading ? "..." : formatCurrency(inventoryStats.totalValue),
+      change: "Total nilai inventori",
+      icon: <LucideTrendingUp size={18} />,
+      gradient: "from-emerald-500 to-teal-600",
     },
     {
-      id: "#INV-003",
-      customer: "Bob Johnson",
-      amount: "Rp 75,000",
-      status: "processing",
-    },
-    {
-      id: "#INV-004",
-      customer: "Alice Brown",
-      amount: "Rp 250,000",
-      status: "completed",
+      title: "Stok Rendah",
+      value: loading
+        ? "..."
+        : (inventoryStats.lowStock + inventoryStats.criticalStock).toString(),
+      change: inventoryStats.outOfStock + " habis",
+      icon: <LucideAlertTriangle size={18} />,
+      gradient: "from-amber-500 to-orange-600",
+      warning: true,
     },
   ];
 
@@ -220,7 +315,7 @@ export default function Dashboard() {
                   {stat.value}
                 </p>
                 <p
-                  className={`text-sm ${stat.negative ? "text-red-200" : "text-emerald-200"}`}
+                  className={`text-sm ${stat.warning ? "text-amber-200" : "text-emerald-200"}`}
                 >
                   {stat.change}
                 </p>
@@ -234,14 +329,20 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl  border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">Tren Penjualan</h3>
             <div className="h-64">
-              <Line data={monthlySalesData} options={chartOptions} />
+              <Line data={monthlySalesChartData} options={chartOptions} />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl  border border-purple-200 p-4">
+          <div className="bg-white rounded-2xl border border-purple-200 p-4">
             <h3 className="font-bold text-gray-900 mb-4">Kategori</h3>
             <div className="h-64">
-              <Doughnut data={categoryData} options={doughnutOptions} />
+              {categoryDistribution.length > 0 ? (
+                <Doughnut data={categoryData} options={doughnutOptions} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Tidak ada data kategori
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -252,34 +353,56 @@ export default function Dashboard() {
             <h3 className="font-bold text-gray-900">Pesanan Terbaru</h3>
           </div>
           <div className="divide-y divide-gray-50">
-            {recentOrders.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {order.customer.charAt(0)}
+            {recentOrders.length > 0 ? (
+              recentOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-linear-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {(
+                        order.customer_name ||
+                        order.order_number ||
+                        "O"
+                      ).charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {order.customer_name || "Umum"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {order.order_number}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {order.customer}
-                    </p>
-                    <p className="text-xs text-gray-500">{order.id}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-gray-900">
+                      {formatCurrency(order.total_amount)}
+                    </span>
+                    <span
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        order.payment_status === "paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : order.payment_status === "pending"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {order.payment_status === "paid"
+                        ? "Lunas"
+                        : order.payment_status === "pending"
+                          ? "Pending"
+                          : "Belum Bayar"}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-bold text-gray-900">
-                    {order.amount}
-                  </span>
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${statusStyles[order.status]}`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <p>Belum ada pesanan</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
