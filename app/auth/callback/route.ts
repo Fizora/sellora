@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  // Use explicit app URL env variable to avoid localhost redirect issue
+  // Fallback to derived origin if env is not set
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const origin = appUrl ? new URL(appUrl).origin : new URL(request.url).origin;
   const code = searchParams.get("code");
   const next = searchParams.get("next") || "/admin/dashboard";
   const errorCode = searchParams.get("error_code");
